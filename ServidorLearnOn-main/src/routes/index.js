@@ -1,0 +1,60 @@
+const router = require('express').Router();
+const { auth, role } = require('../middlewares/auth');
+const passport = require('../config/passport');
+
+const authCtrl = require('../controllers/authController');
+const requestCtrl = require('../controllers/requestController');
+const matchCtrl = require('../controllers/matchController');
+const courseCtrl = require('../controllers/courseController');
+const interactionCtrl = require('../controllers/interactionController');
+
+const authValidation = require('../validations/authValidation');
+const requestValidation = require('../validations/courseRequestValidation');
+
+router.post('/auth/students/register', authValidation.register, authCtrl.registerStudent);
+router.post('/auth/students/login', authValidation.login, authCtrl.loginStudent);
+router.post('/auth/instructors/register', authValidation.register, authCtrl.registerInstructor);
+router.post('/auth/instructors/login', authValidation.login, authCtrl.loginInstructor);
+router.post('/auth/admin/register', auth, role('admin'), authValidation.register, authCtrl.registerAdmin);
+router.post('/auth/admin/login', authValidation.login, authCtrl.loginAdmin);
+router.post('/auth/refresh', authValidation.refresh, authCtrl.refresh);
+router.post('/auth/logout', authCtrl.logout);
+
+router.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
+);
+
+router.get('/auth/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/login?erro=google` }),
+  (req, res) => {
+    const { token, refreshToken, name } = req.user;
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&refreshToken=${refreshToken}&name=${encodeURIComponent(name)}`);
+  }
+);
+
+router.post('/requests', auth, role('aluno'), requestValidation.createRequest, requestCtrl.createRequest);
+router.get('/requests', auth, role('aluno'), requestCtrl.listMyRequests);
+router.get('/requests/queue', auth, role('instrutor', 'admin'), requestValidation.listQueue, requestCtrl.listQueue);
+router.get('/requests/:id', auth, role('aluno'), requestValidation.requestId, requestCtrl.getRequest);
+router.patch('/requests/:id/status', auth, role('admin'), requestValidation.updateStatus, requestCtrl.updateStatus);
+router.post('/requests/:id/recalculate-priority', auth, role('admin'), requestValidation.requestId, requestCtrl.recalculatePriority);
+
+router.get('/matches/pending', auth, role('instrutor'), matchCtrl.listPendingMatches);
+router.put('/matches/:id/respond', auth, role('instrutor'), matchCtrl.respond);
+router.put('/matches/:id/confirm-format', auth, role('aluno'), matchCtrl.confirmFormat);
+
+router.get('/courses', courseCtrl.listPublic);
+router.get('/courses/my', auth, role('aluno'), courseCtrl.myCourses);
+router.get('/courses/:id', courseCtrl.getCourse);
+router.post('/courses', auth, role('instrutor'), courseCtrl.publishCourse);
+router.post('/courses/:id/progress', auth, role('aluno'), courseCtrl.saveProgress);
+
+router.post('/schedules', auth, role('instrutor'), interactionCtrl.createSchedule);
+router.get('/schedules', auth, role('aluno', 'instrutor'), interactionCtrl.listSchedules);
+
+router.get('/courses/:courseId/questions', auth, interactionCtrl.listQuestions);
+router.post('/courses/:courseId/questions', auth, role('aluno'), interactionCtrl.postQuestion);
+router.post('/questions/:questionId/answers', auth, role('instrutor'), interactionCtrl.postAnswer);
+router.post('/courses/:courseId/reviews', auth, role('aluno'), interactionCtrl.postReview);
+
+module.exports = router;

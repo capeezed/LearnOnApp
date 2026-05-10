@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+node_modules/
+.env
+ServidorLearnOn-main/node_modules/
+ServidorLearnOn-main/.env
