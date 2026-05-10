@@ -29,6 +29,10 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".instructor.InstructorDashboardActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.dashboard.DashboardActivity"
             android:exported="false" />
 

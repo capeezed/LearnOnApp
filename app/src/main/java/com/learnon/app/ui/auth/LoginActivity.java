@@ -13,6 +13,7 @@ import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
 import com.learnon.app.data.api.ApiService;
 import com.learnon.app.data.model.Student;
+import com.learnon.app.instructor.InstructorDashboardActivity;
 import com.learnon.app.ui.dashboard.DashboardActivity;
 import com.learnon.app.utils.SessionManager;
 
@@ -26,7 +27,7 @@ import retrofit2.Response;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etEmail, etSenha;
-    private Button btnEntrar, btnGoogle;
+    private Button btnEntrar, btnGoogle, btnInstructor;
     private TextView tvErro, tvCadastro;
     private SessionManager session;
     private ApiService api;
@@ -48,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         etSenha    = findViewById(R.id.etSenha);
         btnEntrar  = findViewById(R.id.btnEntrar);
         btnGoogle  = findViewById(R.id.btnGoogle);
+        btnInstructor = findViewById(R.id.btnInstructor);
         tvErro     = findViewById(R.id.tvErro);
         tvCadastro = findViewById(R.id.tvCadastro);
 
@@ -60,6 +62,10 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
             startActivity(intent);
         });
+
+        btnInstructor.setOnClickListener(v ->
+                startActivity(new Intent(this, InstructorDashboardActivity.class))
+        );
 
         tvCadastro.setOnClickListener(v ->
                 startActivity(new Intent(this, CadastroActivity.class))

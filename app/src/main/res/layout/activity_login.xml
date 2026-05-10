@@ -88,6 +88,16 @@
             android:textColor="#1c2b3a"
             android:textSize="14sp"
             android:background="@drawable/btn_outline"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnInstructor"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Painel do instrutor"
+            android:textColor="#1c2b3a"
+            android:textSize="14sp"
+            android:background="@drawable/btn_outline"
             android:layout_marginBottom="32dp" />
 
         <LinearLayout

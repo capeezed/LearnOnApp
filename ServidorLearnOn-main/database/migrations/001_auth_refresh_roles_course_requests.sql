@@ -54,25 +54,25 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- Status pode conter valores antigos nao mapeados na VM. Converter para VARCHAR
+-- antes evita "Data truncated" ao expandir/restringir ENUM.
 ALTER TABLE course_requests
-  MODIFY COLUMN status ENUM(
-    'pending',
-    'matched',
-    'in_production',
-    'delivered',
-    'cancelled',
-    'aguardando_match',
-    'aguardando_instrutor',
-    'em_andamento',
-    'concluido',
-    'cancelado'
-  ) NOT NULL DEFAULT 'aguardando_match';
+  MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'aguardando_match';
 
-UPDATE course_requests SET status = 'aguardando_match' WHERE status = 'pending';
-UPDATE course_requests SET status = 'aguardando_instrutor' WHERE status = 'matched';
-UPDATE course_requests SET status = 'em_andamento' WHERE status = 'in_production';
-UPDATE course_requests SET status = 'concluido' WHERE status = 'delivered';
-UPDATE course_requests SET status = 'cancelado' WHERE status = 'cancelled';
+UPDATE course_requests SET status = 'aguardando_match' WHERE status IN ('pending', 'queued', 'open', '');
+UPDATE course_requests SET status = 'aguardando_instrutor' WHERE status IN ('matched', 'waiting_instructor');
+UPDATE course_requests SET status = 'em_andamento' WHERE status IN ('in_production', 'processing', 'accepted');
+UPDATE course_requests SET status = 'concluido' WHERE status IN ('delivered', 'done', 'completed');
+UPDATE course_requests SET status = 'cancelado' WHERE status IN ('cancelled', 'canceled', 'expired', 'rejected');
+UPDATE course_requests
+SET status = 'aguardando_match'
+WHERE status NOT IN (
+  'aguardando_match',
+  'aguardando_instrutor',
+  'em_andamento',
+  'concluido',
+  'cancelado'
+);
 
 ALTER TABLE course_requests
   MODIFY COLUMN status ENUM(
