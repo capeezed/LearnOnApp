@@ -26,6 +26,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -62,6 +63,7 @@ import com.learnon.app.instructor.ui.screens.RequestDetailScreen
 import com.learnon.app.instructor.ui.screens.RequestsScreen
 import com.learnon.app.instructor.ui.screens.ReviewsScreen
 import com.learnon.app.instructor.ui.screens.UploadScreen
+import com.learnon.app.instructor.registration.TeacherRegistrationRoute
 import com.learnon.app.instructor.viewmodel.InstructorViewModel
 import kotlinx.coroutines.launch
 
@@ -77,11 +79,27 @@ fun InstructorRoot(viewModel: InstructorViewModel) {
 
     Crossfade(targetState = state.isAuthenticated, label = "auth") { authenticated ->
         if (!authenticated) {
-            InstructorLoginScreen(
-                isLoading = state.isLoading,
-                snackbarHostState = snackbarHostState,
-                onLogin = viewModel::login,
-            )
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = InstructorRoute.Login.route) {
+                composable(InstructorRoute.Login.route) {
+                    InstructorLoginScreen(
+                        isLoading = state.isLoading,
+                        snackbarHostState = snackbarHostState,
+                        onLogin = viewModel::login,
+                        onApply = { navController.navigate(InstructorRoute.TeacherRegistration.route) },
+                    )
+                }
+                composable(InstructorRoute.TeacherRegistration.route) {
+                    TeacherRegistrationRoute(
+                        onBack = { navController.popBackStack() },
+                        onSuccessDone = {
+                            navController.navigate(InstructorRoute.Login.route) {
+                                popUpTo(InstructorRoute.Login.route) { inclusive = true }
+                            }
+                        },
+                    )
+                }
+            }
         } else {
             val navController = rememberNavController()
             val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -185,6 +203,7 @@ private fun InstructorLoginScreen(
     isLoading: Boolean,
     snackbarHostState: SnackbarHostState,
     onLogin: (String, String) -> Unit,
+    onApply: () -> Unit,
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -230,11 +249,9 @@ private fun InstructorLoginScreen(
                 }
             }
             item {
-                Text(
-                    "TODO backend/mobile: quando houver decisao de UX, este login pode ser unificado com aluno por seletor de perfil.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                OutlinedButton(onClick = onApply, modifier = Modifier.fillMaxWidth()) {
+                    Text("Candidatar-se como instrutor")
+                }
             }
         }
     }

@@ -12,6 +12,9 @@ interface InstructorApi {
     @POST("auth/instructors/login")
     suspend fun login(@Body body: InstructorLoginRequestDto): Response<InstructorLoginResponseDto>
 
+    @POST("teacher-applications")
+    suspend fun createTeacherApplication(@Body body: TeacherRegisterRequest): Response<TeacherApplicationResponseDto>
+
     @GET("matches/pending")
     suspend fun pendingMatches(): Response<List<MatchDto>>
 

@@ -7,9 +7,11 @@ const requestCtrl = require('../controllers/requestController');
 const matchCtrl = require('../controllers/matchController');
 const courseCtrl = require('../controllers/courseController');
 const interactionCtrl = require('../controllers/interactionController');
+const teacherApplicationCtrl = require('../controllers/teacherApplicationController');
 
 const authValidation = require('../validations/authValidation');
 const requestValidation = require('../validations/courseRequestValidation');
+const teacherApplicationValidation = require('../validations/teacherApplicationValidation');
 
 router.post('/auth/students/register', authValidation.register, authCtrl.registerStudent);
 router.post('/auth/students/login', authValidation.login, authCtrl.loginStudent);
@@ -19,6 +21,10 @@ router.post('/auth/admin/register', auth, role('admin'), authValidation.register
 router.post('/auth/admin/login', authValidation.login, authCtrl.loginAdmin);
 router.post('/auth/refresh', authValidation.refresh, authCtrl.refresh);
 router.post('/auth/logout', authCtrl.logout);
+
+router.post('/teacher-applications', teacherApplicationValidation.create, teacherApplicationCtrl.create);
+router.get('/teacher-applications', auth, role('admin'), teacherApplicationValidation.list, teacherApplicationCtrl.list);
+router.patch('/teacher-applications/:id/status', auth, role('admin'), teacherApplicationValidation.updateStatus, teacherApplicationCtrl.updateStatus);
 
 router.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })

@@ -16,6 +16,8 @@ import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class InstructorRoute(val route: String, val label: String, val icon: ImageVector) {
+    data object Login : InstructorRoute("login", "Entrar", Icons.Outlined.Person)
+    data object TeacherRegistration : InstructorRoute("teacherRegistration", "Candidatura", Icons.Outlined.School)
     data object Home : InstructorRoute("home", "Home", Icons.Outlined.Home)
     data object Requests : InstructorRoute("requests", "Pedidos", Icons.Outlined.TaskAlt)
     data object RequestDetail : InstructorRoute("requestDetail", "Detalhe", Icons.Outlined.TaskAlt)

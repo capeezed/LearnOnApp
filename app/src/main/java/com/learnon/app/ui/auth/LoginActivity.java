@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.learnon.app.BuildConfig;
 import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
 import com.learnon.app.data.api.ApiService;
@@ -58,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
         btnEntrar.setOnClickListener(v -> fazerLogin());
 
         btnGoogle.setOnClickListener(v -> {
-            String url = "https://heterozygous-stephnie-oversweetly.ngrok-free.dev/api/auth/google";
+            String url = BuildConfig.LEARNON_BASE_URL + "auth/google";
             Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
             startActivity(intent);
         });
