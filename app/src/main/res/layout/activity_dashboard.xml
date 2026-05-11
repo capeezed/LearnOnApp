@@ -3,12 +3,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#f0ebe3">
+    android:background="@color/learnon_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="#ffffff"
+        android:background="@color/learnon_surface"
         android:elevation="4dp"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
@@ -22,7 +22,7 @@
             android:text="LearnOn"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#1c2b3a" />
+            android:textColor="@color/learnon_text" />
 
         <TextView
             android:id="@+id/tvSair"
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:text="Sair"
             android:textSize="14sp"
-            android:textColor="#d64e2a"
+            android:textColor="@color/learnon_primary"
             android:textStyle="bold"
             android:padding="8dp" />
 
@@ -61,7 +61,7 @@
                     android:text="Ola, bem-vindo ao LearnOn!"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="#ffffff"
+                    android:textColor="@color/learnon_text"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -69,7 +69,7 @@
                     android:layout_height="wrap_content"
                     android:text="O que voce quer aprender hoje?"
                     android:textSize="14sp"
-                    android:textColor="#88aabb" />
+                    android:textColor="@color/learnon_text_muted" />
 
             </LinearLayout>
 
@@ -79,7 +79,7 @@
                 android:text="Acesso rapido"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:layout_marginBottom="16dp" />
 
             <LinearLayout
@@ -105,7 +105,7 @@
                         android:text="Meus Cursos"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1c2b3a" />
+                        android:textColor="@color/learnon_text" />
 
                 </LinearLayout>
 
@@ -126,7 +126,7 @@
                         android:text="Agenda"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1c2b3a" />
+                        android:textColor="@color/learnon_text" />
 
                 </LinearLayout>
 
@@ -148,7 +148,7 @@
                     android:text="+ Pedir Curso"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#d64e2a" />
+                    android:textColor="@color/learnon_primary" />
 
             </LinearLayout>
 
@@ -158,7 +158,7 @@
                 android:text="Pedidos Recentes"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:layout_marginBottom="16dp" />
 
             <LinearLayout
@@ -173,7 +173,7 @@
                 android:layout_height="wrap_content"
                 android:text="Voce ainda nao fez nenhum pedido."
                 android:textSize="14sp"
-                android:textColor="#7a7060"
+                android:textColor="@color/learnon_text_muted"
                 android:gravity="center"
                 android:padding="32dp"
                 android:background="@drawable/card_bg"

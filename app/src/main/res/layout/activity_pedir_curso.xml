@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f0ebe3"
+    android:background="@color/learnon_background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -13,7 +13,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="64dp"
-            android:background="#ffffff"
+            android:background="@color/learnon_surface"
             android:elevation="4dp"
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
@@ -26,7 +26,7 @@
                 android:layout_height="wrap_content"
                 android:text="← "
                 android:textSize="20sp"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:padding="8dp" />
 
             <TextView
@@ -36,7 +36,7 @@
                 android:text="Pedir Curso"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a" />
+                android:textColor="@color/learnon_text" />
 
         </LinearLayout>
 
@@ -52,7 +52,7 @@
                 android:text="Titulo do curso"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:layout_marginBottom="8dp" />
 
             <EditText
@@ -63,8 +63,8 @@
                 android:background="@drawable/input_bg"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:textColor="#1c2b3a"
-                android:textColorHint="#7a7060"
+                android:textColor="@color/learnon_text"
+                android:textColorHint="@color/learnon_text_muted"
                 android:textSize="15sp"
                 android:layout_marginBottom="20dp" />
 
@@ -74,7 +74,7 @@
                 android:text="Descricao"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:layout_marginBottom="8dp" />
 
             <EditText
@@ -86,8 +86,8 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:paddingTop="12dp"
-                android:textColor="#1c2b3a"
-                android:textColorHint="#7a7060"
+                android:textColor="@color/learnon_text"
+                android:textColorHint="@color/learnon_text_muted"
                 android:textSize="15sp"
                 android:gravity="top"
                 android:inputType="textMultiLine"
@@ -99,7 +99,7 @@
                 android:text="Area / Tema"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:layout_marginBottom="8dp" />
 
             <EditText
@@ -110,8 +110,8 @@
                 android:background="@drawable/input_bg"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:textColor="#1c2b3a"
-                android:textColorHint="#7a7060"
+                android:textColor="@color/learnon_text"
+                android:textColorHint="@color/learnon_text_muted"
                 android:textSize="15sp"
                 android:layout_marginBottom="20dp" />
 
@@ -121,7 +121,7 @@
                 android:text="Formato preferido"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1c2b3a"
+                android:textColor="@color/learnon_text"
                 android:layout_marginBottom="8dp" />
 
             <LinearLayout
@@ -138,8 +138,8 @@
                     android:layout_marginEnd="8dp"
                     android:text="Ao vivo"
                     android:textSize="13sp"
-                    android:background="@drawable/btn_outline"
-                    android:textColor="#1c2b3a" />
+                    android:background="@drawable/btn_format_choice"
+                    android:textColor="@color/format_choice_text" />
 
                 <Button
                     android:id="@+id/btnGravado"
@@ -149,8 +149,8 @@
                     android:layout_marginStart="8dp"
                     android:text="Gravado"
                     android:textSize="13sp"
-                    android:background="@drawable/btn_outline"
-                    android:textColor="#1c2b3a" />
+                    android:background="@drawable/btn_format_choice"
+                    android:textColor="@color/format_choice_text" />
 
             </LinearLayout>
 
@@ -159,7 +159,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textColor="#d64e2a"
+                android:textColor="@color/learnon_primary"
                 android:textSize="13sp"
                 android:gravity="center"
                 android:layout_marginBottom="16dp"
@@ -170,7 +170,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textColor="#2a7a6e"
+                android:textColor="@color/learnon_success"
                 android:textSize="13sp"
                 android:gravity="center"
                 android:layout_marginBottom="16dp"
@@ -181,7 +181,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="Enviar pedido"
-                android:textColor="#ffffff"
+                android:textColor="@color/learnon_text"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:background="@drawable/btn_primary" />

@@ -12,6 +12,7 @@ import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
 import com.learnon.app.data.api.ApiService;
 import com.learnon.app.data.model.Pedido;
+import com.learnon.app.data.model.Student;
 import com.learnon.app.utils.SessionManager;
 
 import java.util.HashMap;
@@ -49,24 +50,24 @@ public class PedirCursoActivity extends AppCompatActivity {
         tvVoltar     = findViewById(R.id.tvVoltar);
 
         tvVoltar.setOnClickListener(v -> finish());
+        atualizarFormatoSelecionado();
 
         btnAoVivo.setOnClickListener(v -> {
             formatoSelecionado = "live";
-            btnAoVivo.setBackground(getDrawable(R.drawable.btn_primary));
-            btnAoVivo.setTextColor(0xFFffffff);
-            btnGravado.setBackground(getDrawable(R.drawable.btn_outline));
-            btnGravado.setTextColor(0xFF1c2b3a);
+            atualizarFormatoSelecionado();
         });
 
         btnGravado.setOnClickListener(v -> {
             formatoSelecionado = "recorded";
-            btnGravado.setBackground(getDrawable(R.drawable.btn_primary));
-            btnGravado.setTextColor(0xFFffffff);
-            btnAoVivo.setBackground(getDrawable(R.drawable.btn_outline));
-            btnAoVivo.setTextColor(0xFF1c2b3a);
+            atualizarFormatoSelecionado();
         });
 
         btnEnviar.setOnClickListener(v -> enviarPedido());
+    }
+
+    private void atualizarFormatoSelecionado() {
+        btnAoVivo.setSelected("live".equals(formatoSelecionado));
+        btnGravado.setSelected("recorded".equals(formatoSelecionado));
     }
 
     private void enviarPedido() {
@@ -91,13 +92,21 @@ public class PedirCursoActivity extends AppCompatActivity {
         body.put("format_preference", formatoSelecionado);
         body.put("urgency", "normal");
 
+        enviarPedidoComToken(body, false);
+    }
+
+    private void enviarPedidoComToken(Map<String, String> body, boolean jaTentouRenovar) {
         String token = "Bearer " + session.getToken();
 
         api.criarPedido(token, body).enqueue(new Callback<Pedido>() {
             @Override
             public void onResponse(Call<Pedido> call, Response<Pedido> response) {
-                btnEnviar.setEnabled(true);
-                btnEnviar.setText("Enviar pedido");
+                if (response.code() == 401 && !jaTentouRenovar) {
+                    renovarToken(() -> enviarPedidoComToken(body, true));
+                    return;
+                }
+
+                finalizarEnvio();
 
                 if (response.isSuccessful()) {
                     etTitulo.setText("");
@@ -112,11 +121,47 @@ public class PedirCursoActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Pedido> call, Throwable t) {
-                btnEnviar.setEnabled(true);
-                btnEnviar.setText("Enviar pedido");
+                finalizarEnvio();
                 mostrarErro("Erro de conexao. Tente novamente.");
             }
         });
+    }
+
+    private void renovarToken(Runnable onSuccess) {
+        String refreshToken = session.getRefreshToken();
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            finalizarEnvio();
+            mostrarErro("Sessao expirada. Faca login novamente.");
+            return;
+        }
+
+        Map<String, String> body = new HashMap<>();
+        body.put("refreshToken", refreshToken);
+
+        api.refresh(body).enqueue(new Callback<Student>() {
+            @Override
+            public void onResponse(Call<Student> call, Response<Student> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Student student = response.body();
+                    session.salvarTokens(student.getToken(), student.getRefreshToken());
+                    onSuccess.run();
+                } else {
+                    finalizarEnvio();
+                    mostrarErro("Sessao expirada. Faca login novamente.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Student> call, Throwable t) {
+                finalizarEnvio();
+                mostrarErro("Erro ao renovar sessao. Tente novamente.");
+            }
+        });
+    }
+
+    private void finalizarEnvio() {
+        btnEnviar.setEnabled(true);
+        btnEnviar.setText("Enviar pedido");
     }
 
     private void mostrarErro(String msg) {

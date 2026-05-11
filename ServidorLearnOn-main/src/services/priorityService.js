@@ -100,8 +100,8 @@ async function calculateAndPersist(requestId) {
   await db.query(
     `INSERT INTO queue_scores
       (request_id, demand_score, age_score, urgency_score, availability_score,
-       total_score, queue_type, explanation, calculated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+       total_score, queue_type, calculated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
      ON DUPLICATE KEY UPDATE
        demand_score = VALUES(demand_score),
        age_score = VALUES(age_score),
@@ -109,7 +109,6 @@ async function calculateAndPersist(requestId) {
        availability_score = VALUES(availability_score),
        total_score = VALUES(total_score),
        queue_type = VALUES(queue_type),
-       explanation = VALUES(explanation),
        calculated_at = NOW()`,
     [
       requestId,
@@ -119,7 +118,6 @@ async function calculateAndPersist(requestId) {
       score.availabilityScore,
       score.totalScore,
       score.queueType,
-      JSON.stringify(score.explanation),
     ]
   );
 
@@ -133,7 +131,7 @@ async function calculateAndPersist(requestId) {
 
 async function listQueue(queueType = 'normal', limit = 20) {
   const [rows] = await db.query(
-    `SELECT cr.*, qs.total_score, qs.queue_type, qs.explanation, s.name AS student_name
+    `SELECT cr.*, qs.total_score, qs.queue_type, s.name AS student_name
      FROM course_requests cr
      LEFT JOIN queue_scores qs ON qs.request_id = cr.id
      JOIN students s ON s.id = cr.student_id

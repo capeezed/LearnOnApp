@@ -1,6 +1,9 @@
 package com.learnon.app.instructor.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,7 +16,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -85,7 +91,7 @@ fun HomeScreen(state: InstructorUiState, onRefresh: () -> Unit, navigate: (Instr
 @Composable
 fun RequestsScreen(
     state: InstructorUiState,
-    onAccept: (String) -> Unit,
+    onAccept: (InstructorRequest) -> Unit,
     onReject: (String) -> Unit,
     onOpenDetail: (InstructorRequest) -> Unit,
 ) {
@@ -116,8 +122,10 @@ fun RequestsScreen(
                 actions = {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = { onOpenDetail(request) }) { Text("Detalhes") }
-                        OutlinedButton(onClick = { onReject(request.id) }) { Text("Rejeitar") }
-                        Button(onClick = { onAccept(request.id) }) { Text("Aceitar") }
+                        if (!request.id.startsWith("request:")) {
+                            OutlinedButton(onClick = { onReject(request.id) }) { Text("Rejeitar") }
+                        }
+                        Button(onClick = { onAccept(request) }) { Text("Aceitar") }
                     }
                 },
             )
@@ -145,15 +153,24 @@ fun RequestDetailScreen(request: InstructorRequest?) {
 }
 
 @Composable
-fun CreateCourseScreen(state: InstructorUiState, onCreate: (String?, String, String) -> Unit) {
-    var requestId by remember { mutableStateOf(state.pendingRequests.firstOrNull()?.id.orEmpty()) }
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+fun CreateCourseScreen(state: InstructorUiState, onCreate: (String?, String, String, String, Int, Double) -> Unit) {
+    val selected = state.selectedRequest
+    var requestId by remember(selected?.id) { mutableStateOf(selected?.id ?: state.pendingRequests.firstOrNull()?.id.orEmpty()) }
+    var title by remember(selected?.title) { mutableStateOf(selected?.title?.let { "Microcurso: $it" } ?: "") }
+    var description by remember(selected?.description) { mutableStateOf(selected?.description.orEmpty()) }
+    var format by remember(selected?.formatPreference) { mutableStateOf(if (selected?.formatPreference == "live") "live" else "recorded") }
+    var duration by remember { mutableStateOf("20") }
+    var price by remember { mutableStateOf("0.00") }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             SectionTitle("Criar microcurso")
-            Text("Fluxo preparado para rascunho, publicacao e entrega vinculada ao pedido.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Crie a entrega vinculada ao pedido aceito. Ao publicar, os alunos interessados sao matriculados automaticamente.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        selected?.let { request ->
+            item {
+                RequestCard(request)
+            }
         }
         item { OutlinedTextField(requestId, { requestId = it }, label = { Text("ID do pedido") }, modifier = Modifier.fillMaxWidth()) }
         item { OutlinedTextField(title, { title = it }, label = { Text("Titulo") }, modifier = Modifier.fillMaxWidth()) }
@@ -168,9 +185,29 @@ fun CreateCourseScreen(state: InstructorUiState, onCreate: (String?, String, Str
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = {}) { Text("Salvar rascunho") }
-                Button(onClick = { onCreate(requestId.ifBlank { null }, title, description) }, enabled = title.isNotBlank() && description.isNotBlank()) {
-                    Text("Publicar/entregar")
+                FilterChip(selected = format == "recorded", onClick = { format = "recorded" }, label = { Text("Gravado") })
+                FilterChip(selected = format == "live", onClick = { format = "live" }, label = { Text("Ao vivo") })
+            }
+        }
+        item { OutlinedTextField(duration, { duration = it.filter(Char::isDigit) }, label = { Text("Duracao em minutos") }, modifier = Modifier.fillMaxWidth()) }
+        item { OutlinedTextField(price, { price = it.replace(",", ".") }, label = { Text("Preco") }, modifier = Modifier.fillMaxWidth()) }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {}) { Text("Salvar depois") }
+                Button(
+                    onClick = {
+                        onCreate(
+                            requestId.ifBlank { null },
+                            title,
+                            description,
+                            format,
+                            duration.toIntOrNull() ?: 20,
+                            price.toDoubleOrNull() ?: 0.0,
+                        )
+                    },
+                    enabled = title.isNotBlank() && description.isNotBlank() && requestId.isNotBlank(),
+                ) {
+                    Text(if (state.isLoading) "Publicando..." else "Publicar curso")
                 }
             }
         }
@@ -178,28 +215,115 @@ fun CreateCourseScreen(state: InstructorUiState, onCreate: (String?, String, Str
 }
 
 @Composable
-fun UploadScreen() {
-    var progress by remember { mutableFloatStateOf(0.34f) }
+fun UploadScreen(
+    state: InstructorUiState,
+    onLoadVideos: (String) -> Unit,
+    onUpload: (String, String, String, Int, Uri) -> Unit,
+    onUpdate: (String, String, String, String, Int) -> Unit,
+    onDelete: (String, String) -> Unit,
+) {
+    var courseId by remember(state.courses) { mutableStateOf(state.selectedCourseId ?: state.courses.firstOrNull()?.id.orEmpty()) }
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var orderIndex by remember { mutableStateOf("0") }
+    var selectedVideoUri by remember { mutableStateOf<Uri?>(null) }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        selectedVideoUri = uri
+    }
+
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             SectionTitle("Upload de video")
-            Text("Preparado para multipart. TODO backend: confirmar endpoint de upload/processamento.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Gerencie as aulas em video dos cursos publicados ou em rascunho.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         item {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Outlined.PlayCircle, contentDescription = null)
-                    Text("Preview do microcurso", fontWeight = FontWeight.SemiBold)
-                    Text("video-refresh-token.mp4 - 128 MB", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
-                    Text("Processamento: ${(progress * 100).toInt()}%")
-                    Button(onClick = { progress = (progress + 0.18f).coerceAtMost(1f) }) { Text("Simular progresso") }
-                    AnimatedVisibility(progress >= 1f) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(Icons.Outlined.CloudDone, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                            Text("Upload pronto para publicacao")
-                        }
+                    OutlinedTextField(courseId, { courseId = it }, label = { Text("ID do curso") }, modifier = Modifier.fillMaxWidth())
+                    Button(onClick = { if (courseId.isNotBlank()) onLoadVideos(courseId) }, enabled = courseId.isNotBlank()) {
+                        Text("Carregar videos")
                     }
+                    state.courses.take(5).forEach { course ->
+                        AssistChip(
+                            onClick = {
+                                courseId = course.id
+                                onLoadVideos(course.id)
+                            },
+                            label = { Text(course.title) },
+                        )
+                    }
+                }
+            }
+        }
+        item {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Novo video", fontWeight = FontWeight.SemiBold)
+                    OutlinedTextField(title, { title = it }, label = { Text("Titulo") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(description, { description = it }, label = { Text("Descricao") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+                    OutlinedTextField(orderIndex, { orderIndex = it.filter(Char::isDigit) }, label = { Text("Ordem") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedButton(onClick = { picker.launch("video/*") }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.CloudUpload, contentDescription = null)
+                        Spacer(Modifier.padding(4.dp))
+                        Text(if (selectedVideoUri == null) "Selecionar video" else "Video selecionado")
+                    }
+                    Button(
+                        onClick = {
+                            selectedVideoUri?.let { uri ->
+                                onUpload(courseId, title, description, orderIndex.toIntOrNull() ?: 0, uri)
+                            }
+                        },
+                        enabled = !state.isLoading && courseId.isNotBlank() && title.isNotBlank() && selectedVideoUri != null,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(if (state.isLoading) "Enviando..." else "Enviar video")
+                    }
+                }
+            }
+        }
+        item { SectionTitle("Videos do curso") }
+        items(state.videos) { video ->
+            VideoEditCard(
+                courseId = courseId,
+                video = video,
+                onUpdate = onUpdate,
+                onDelete = onDelete,
+            )
+        }
+    }
+}
+
+@Composable
+private fun VideoEditCard(
+    courseId: String,
+    video: com.learnon.app.instructor.domain.model.InstructorVideo,
+    onUpdate: (String, String, String, String, Int) -> Unit,
+    onDelete: (String, String) -> Unit,
+) {
+    var title by remember(video.id) { mutableStateOf(video.title) }
+    var description by remember(video.id) { mutableStateOf(video.description) }
+    var orderIndex by remember(video.id) { mutableStateOf(video.orderIndex.toString()) }
+
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Outlined.PlayCircle, contentDescription = null)
+                Text("Aula ${video.orderIndex}", fontWeight = FontWeight.SemiBold)
+            }
+            OutlinedTextField(title, { title = it }, label = { Text("Titulo") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(description, { description = it }, label = { Text("Descricao") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+            OutlinedTextField(orderIndex, { orderIndex = it.filter(Char::isDigit) }, label = { Text("Ordem") }, modifier = Modifier.fillMaxWidth())
+            Text("${video.duration}s", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { onUpdate(video.id, courseId, title, description, orderIndex.toIntOrNull() ?: video.orderIndex) }) {
+                    Icon(Icons.Outlined.Save, contentDescription = null)
+                    Spacer(Modifier.padding(4.dp))
+                    Text("Salvar")
+                }
+                OutlinedButton(onClick = { onDelete(video.id, courseId) }) {
+                    Icon(Icons.Outlined.Delete, contentDescription = null)
+                    Spacer(Modifier.padding(4.dp))
+                    Text("Excluir")
                 }
             }
         }
@@ -230,7 +354,7 @@ fun CoursesScreen(state: InstructorUiState) {
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { SectionTitle("Cursos criados") }
         items(state.courses) {
-            InfoCard(it.title, "${it.category} - ${it.format} - ${it.status} - ${it.revenue}")
+            InfoCard(it.title, "${it.category} - ${it.format} - ${it.status} - ${it.progressLabel} - ${it.revenue}")
         }
     }
 }

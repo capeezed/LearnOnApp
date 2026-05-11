@@ -27,7 +27,9 @@ const recalculatePriority = asyncHandler(async (req, res) => {
 });
 
 const listQueue = asyncHandler(async (req, res) => {
-  const result = await courseRequestService.listQueue(req.validated.queue, req.validated.limit);
+  const result = req.user.role === 'instructor'
+    ? await courseRequestService.listQueueForInstructor(req.validated.queue, req.validated.limit, req.user.id)
+    : await courseRequestService.listQueue(req.validated.queue, req.validated.limit);
   res.json(result);
 });
 

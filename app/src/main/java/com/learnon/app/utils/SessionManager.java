@@ -7,6 +7,7 @@ public class SessionManager {
 
     private static final String PREF_NAME = "learnon_prefs";
     private static final String KEY_TOKEN = "token";
+    private static final String KEY_REFRESH_TOKEN = "refresh_token";
     private static final String KEY_NOME  = "nome";
 
     private final SharedPreferences prefs;
@@ -19,8 +20,19 @@ public class SessionManager {
         prefs.edit().putString(KEY_TOKEN, token).apply();
     }
 
+    public void salvarTokens(String token, String refreshToken) {
+        prefs.edit()
+                .putString(KEY_TOKEN, token)
+                .putString(KEY_REFRESH_TOKEN, refreshToken)
+                .apply();
+    }
+
     public String getToken() {
         return prefs.getString(KEY_TOKEN, null);
+    }
+
+    public String getRefreshToken() {
+        return prefs.getString(KEY_REFRESH_TOKEN, null);
     }
 
     public void salvarNome(String nome) {

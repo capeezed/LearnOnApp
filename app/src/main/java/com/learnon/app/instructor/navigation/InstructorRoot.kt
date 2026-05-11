@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
@@ -146,6 +147,9 @@ fun InstructorRoot(viewModel: InstructorViewModel) {
                                 IconButton(onClick = viewModel::refreshAll) {
                                     Icon(Icons.Outlined.Refresh, contentDescription = "Atualizar")
                                 }
+                                IconButton(onClick = viewModel::logout) {
+                                    Icon(Icons.Outlined.Logout, contentDescription = "Sair")
+                                }
                             },
                         )
                     },
@@ -176,13 +180,30 @@ fun InstructorRoot(viewModel: InstructorViewModel) {
                             HomeScreen(state, viewModel::refreshAll) { navController.navigate(it.route) }
                         }
                         composable(InstructorRoute.Requests.route) {
-                            RequestsScreen(state, viewModel::acceptRequest, viewModel::rejectRequest) {
+                            RequestsScreen(
+                                state = state,
+                                onAccept = { request ->
+                                    viewModel.selectRequest(request)
+                                    viewModel.acceptRequest(request.id)
+                                    navController.navigate(InstructorRoute.CreateCourse.route)
+                                },
+                                onReject = viewModel::rejectRequest,
+                            ) {
+                                viewModel.selectRequest(it)
                                 navController.navigate(InstructorRoute.RequestDetail.route)
                             }
                         }
-                        composable(InstructorRoute.RequestDetail.route) { RequestDetailScreen(state.pendingRequests.firstOrNull() ?: state.queueRequests.firstOrNull()) }
+                        composable(InstructorRoute.RequestDetail.route) { RequestDetailScreen(state.selectedRequest ?: state.pendingRequests.firstOrNull() ?: state.queueRequests.firstOrNull()) }
                         composable(InstructorRoute.CreateCourse.route) { CreateCourseScreen(state, viewModel::createCourse) }
-                        composable(InstructorRoute.Upload.route) { UploadScreen() }
+                        composable(InstructorRoute.Upload.route) {
+                            UploadScreen(
+                                state = state,
+                                onLoadVideos = viewModel::loadVideos,
+                                onUpload = viewModel::uploadVideo,
+                                onUpdate = viewModel::updateVideo,
+                                onDelete = viewModel::deleteVideo,
+                            )
+                        }
                         composable(InstructorRoute.LiveSchedule.route) { LiveScheduleScreen(state, viewModel::createSchedule) }
                         composable(InstructorRoute.Courses.route) { CoursesScreen(state) }
                         composable(InstructorRoute.Qa.route) { QaScreen(state, viewModel::answerQuestion) }

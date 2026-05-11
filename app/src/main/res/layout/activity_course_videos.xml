@@ -2,63 +2,58 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/learnon_background">
+    android:background="@color/learnon_background"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@color/learnon_surface"
-        android:elevation="4dp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
 
         <TextView
             android:id="@+id/tvVoltar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="← "
-            android:textSize="20sp"
+            android:padding="8dp"
+            android:text="&lt;"
             android:textColor="@color/learnon_text"
-            android:padding="8dp" />
+            android:textSize="20sp" />
 
         <TextView
+            android:id="@+id/tvTituloCurso"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Meus Cursos"
+            android:text="Videos do curso"
+            android:textColor="@color/learnon_text"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/learnon_text" />
-
+            android:textStyle="bold" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/listaCursos"
+            android:id="@+id/listaVideos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="24dp">
 
             <TextView
-                android:id="@+id/tvSemCursos"
+                android:id="@+id/tvSemVideos"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Voce ainda nao tem cursos."
-                android:textSize="14sp"
-                android:textColor="@color/learnon_text_muted"
                 android:gravity="center"
-                android:padding="48dp"
-                android:background="@drawable/card_bg"
-                android:visibility="gone" />
-
+                android:text="Carregando videos..."
+                android:textColor="@color/learnon_text_muted"
+                android:textSize="14sp" />
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

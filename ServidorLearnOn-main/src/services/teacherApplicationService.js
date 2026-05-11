@@ -1,5 +1,8 @@
+const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const AppError = require('../utils/AppError');
+
+const SALT_ROUNDS = 12;
 
 function unique(values = []) {
   return [...new Set(values.map((value) => String(value).trim()).filter(Boolean))];
@@ -143,20 +146,89 @@ async function list({ status, limit = 50 } = {}) {
   ));
 }
 
-async function updateStatus(id, status, reviewNotes = null) {
-  const [result] = await db.query(
-    `UPDATE teacher_applications
-     SET status = ?, review_notes = ?, reviewed_at = NOW()
-     WHERE id = ?`,
-    [status, reviewNotes || null, id]
-  );
-  if (!result.affectedRows) throw new AppError('Candidatura nao encontrada.', 404);
+async function createInstructorFromApplication(conn, application, temporaryPassword) {
+  const password = temporaryPassword || process.env.DEFAULT_INSTRUCTOR_TEMP_PASSWORD || 'senha-teste-123';
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  return {
-    id: Number(id),
-    status,
-    message: status === 'approved' ? 'Candidatura aprovada.' : 'Candidatura rejeitada.',
-  };
+  const [existingRows] = await conn.query(
+    'SELECT id FROM instructors WHERE email = ? LIMIT 1',
+    [application.email]
+  );
+
+  let instructorId = existingRows[0]?.id;
+  if (instructorId) {
+    await conn.query(
+      `UPDATE instructors
+       SET name = ?, bio = ?, password_hash = ?, is_active = TRUE
+       WHERE id = ?`,
+      [application.full_name, application.bio, passwordHash, instructorId]
+    );
+  } else {
+    const [insertResult] = await conn.query(
+      `INSERT INTO instructors
+        (name, email, password_hash, bio, active_matches, max_active_matches)
+       VALUES (?, ?, ?, ?, 0, 3)`,
+      [application.full_name, application.email, passwordHash, application.bio]
+    );
+    instructorId = insertResult.insertId;
+  }
+
+  const [areas] = await conn.query(
+    'SELECT area FROM teacher_application_areas WHERE application_id = ?',
+    [application.id]
+  );
+  const expertise = unique(areas.map((item) => item.area.toLowerCase()));
+  if (expertise.length) {
+    await conn.query(
+      'INSERT IGNORE INTO instructor_expertise (instructor_id, topic_tag) VALUES ?',
+      [expertise.map((tag) => [instructorId, tag])]
+    );
+  }
+
+  return { instructorId, temporaryPassword: password, wasExisting: Boolean(existingRows.length) };
+}
+
+async function updateStatus(id, status, reviewNotes = null, temporaryPassword = null) {
+  const conn = await db.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    const [[application]] = await conn.query(
+      'SELECT * FROM teacher_applications WHERE id = ? LIMIT 1 FOR UPDATE',
+      [id]
+    );
+    if (!application) throw new AppError('Candidatura nao encontrada.', 404);
+
+    let instructor = null;
+    if (status === 'approved') {
+      instructor = await createInstructorFromApplication(conn, application, temporaryPassword);
+    }
+
+    await conn.query(
+      `UPDATE teacher_applications
+       SET status = ?, review_notes = ?, reviewed_at = NOW()
+       WHERE id = ?`,
+      [status, reviewNotes || null, id]
+    );
+
+    await conn.commit();
+
+    return {
+      id: Number(id),
+      status,
+      instructor_id: instructor?.instructorId,
+      temporary_password: instructor && !instructor.wasExisting ? instructor.temporaryPassword : undefined,
+      message: status === 'approved'
+        ? 'Candidatura aprovada e instrutor habilitado.'
+        : 'Candidatura rejeitada.',
+    };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 }
 
 module.exports = { create, list, updateStatus };

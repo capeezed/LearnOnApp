@@ -41,6 +41,7 @@ const updateStatus = [
   param('id').isInt({ min: 1 }).withMessage('ID invalido.'),
   body('status').isIn(['approved', 'rejected']).withMessage('Status deve ser approved ou rejected.'),
   body('review_notes').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 2000 }).withMessage('Observacao muito longa.'),
+  body('temporary_password').optional({ nullable: true, checkFalsy: true }).isLength({ min: 8, max: 120 }).withMessage('Senha temporaria deve ter pelo menos 8 caracteres.'),
   validate,
 ];
 

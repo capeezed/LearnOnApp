@@ -10,6 +10,7 @@ import com.learnon.app.instructor.domain.model.InstructorQuestion
 import com.learnon.app.instructor.domain.model.InstructorRequest
 import com.learnon.app.instructor.domain.model.InstructorReview
 import com.learnon.app.instructor.domain.model.InstructorSchedule
+import com.learnon.app.instructor.domain.model.InstructorVideo
 
 data class InstructorUiState(
     val isAuthenticated: Boolean = false,
@@ -19,6 +20,8 @@ data class InstructorUiState(
     val pendingRequests: List<InstructorRequest> = emptyList(),
     val queueRequests: List<InstructorRequest> = emptyList(),
     val courses: List<InstructorCourse> = emptyList(),
+    val videos: List<InstructorVideo> = emptyList(),
+    val selectedCourseId: String? = null,
     val schedules: List<InstructorSchedule> = emptyList(),
     val questions: List<InstructorQuestion> = emptyList(),
     val reviews: List<InstructorReview> = emptyList(),
@@ -26,4 +29,5 @@ data class InstructorUiState(
     val profile: InstructorProfile? = null,
     val notifications: List<InstructorNotification> = emptyList(),
     val analytics: InstructorAnalytics? = null,
+    val selectedRequest: InstructorRequest? = null,
 )

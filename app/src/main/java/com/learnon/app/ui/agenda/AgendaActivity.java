@@ -14,14 +14,17 @@ import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
 import com.learnon.app.data.api.ApiService;
 import com.learnon.app.data.model.Aula;
+import com.learnon.app.data.model.Student;
 import com.learnon.app.utils.SessionManager;
 
+import java.util.HashMap;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -51,13 +54,23 @@ public class AgendaActivity extends AppCompatActivity {
     }
 
     private void carregarAgenda() {
+        carregarAgendaComToken(false);
+    }
+
+    private void carregarAgendaComToken(boolean jaTentouRenovar) {
         String token = "Bearer " + session.getToken();
 
         api.minhaAgenda(token).enqueue(new Callback<List<Aula>>() {
             @Override
             public void onResponse(Call<List<Aula>> call, Response<List<Aula>> response) {
+                if (response.code() == 401 && !jaTentouRenovar) {
+                    renovarToken(() -> carregarAgendaComToken(true));
+                    return;
+                }
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<Aula> aulas = response.body();
+                    listaAulas.removeAllViews();
 
                     if (aulas.isEmpty()) {
                         tvSemAulas.setVisibility(View.VISIBLE);
@@ -82,6 +95,38 @@ public class AgendaActivity extends AppCompatActivity {
         });
     }
 
+    private void renovarToken(Runnable onSuccess) {
+        String refreshToken = session.getRefreshToken();
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            tvSemAulas.setVisibility(View.VISIBLE);
+            tvSemAulas.setText("Sessao expirada. Faca login novamente.");
+            return;
+        }
+
+        Map<String, String> body = new HashMap<>();
+        body.put("refreshToken", refreshToken);
+
+        api.refresh(body).enqueue(new Callback<Student>() {
+            @Override
+            public void onResponse(Call<Student> call, Response<Student> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Student student = response.body();
+                    session.salvarTokens(student.getToken(), student.getRefreshToken());
+                    onSuccess.run();
+                } else {
+                    tvSemAulas.setVisibility(View.VISIBLE);
+                    tvSemAulas.setText("Sessao expirada. Faca login novamente.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Student> call, Throwable t) {
+                tvSemAulas.setVisibility(View.VISIBLE);
+                tvSemAulas.setText("Erro ao renovar sessao.");
+            }
+        });
+    }
+
     private View criarItemAula(Aula aula) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
@@ -98,26 +143,26 @@ public class AgendaActivity extends AppCompatActivity {
         TextView titulo = new TextView(this);
         titulo.setText(aula.getCourseTitle());
         titulo.setTextSize(16);
-        titulo.setTextColor(0xFF1c2b3a);
+        titulo.setTextColor(0xFFECEEF9);
         titulo.setTypeface(null, android.graphics.Typeface.BOLD);
         titulo.setPadding(0, 0, 0, 6);
 
         TextView instrutor = new TextView(this);
         instrutor.setText("Instrutor: " + aula.getInstructorName());
         instrutor.setTextSize(13);
-        instrutor.setTextColor(0xFF7a7060);
+        instrutor.setTextColor(0xFFB4B4C3);
         instrutor.setPadding(0, 0, 0, 4);
 
         TextView horario = new TextView(this);
         horario.setText("Data: " + formatarData(aula.getScheduledAt()));
         horario.setTextSize(13);
-        horario.setTextColor(0xFF7a7060);
+        horario.setTextColor(0xFFB4B4C3);
         horario.setPadding(0, 0, 0, 4);
 
         TextView duracao = new TextView(this);
         duracao.setText("Duracao: " + aula.getDurationMin() + " min");
         duracao.setTextSize(13);
-        duracao.setTextColor(0xFF7a7060);
+        duracao.setTextColor(0xFFB4B4C3);
         duracao.setPadding(0, 0, 0, 16);
 
         card.addView(titulo);
@@ -128,7 +173,7 @@ public class AgendaActivity extends AppCompatActivity {
         if (aula.getMeetingUrl() != null && !aula.getMeetingUrl().isEmpty()) {
             Button btnEntrar = new Button(this);
             btnEntrar.setText("Entrar na aula");
-            btnEntrar.setTextColor(0xFFffffff);
+            btnEntrar.setTextColor(0xFFFFFFFF);
             btnEntrar.setBackground(getDrawable(R.drawable.btn_primary));
             btnEntrar.setOnClickListener(v -> {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(aula.getMeetingUrl()));

@@ -2,52 +2,206 @@ const db = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 
-const publishCourse = asyncHandler(async (req, res) => {
-  const { request_id, title, description, video_url, thumbnail_url, duration_minutes, price } = req.body;
+function courseToApi(course, interestedCount = 0, enrolledCount = 0) {
+  return {
+    ...course,
+    course_id: course.id,
+    status: String(course.status || '').toUpperCase(),
+    interested_students_count: Number(interestedCount || 0),
+    enrolled_students_count: Number(enrolledCount || 0),
+  };
+}
+
+async function resolveInterestedStudents(conn, course) {
+  if (course.request_group_id) {
+    const [rows] = await conn.query(
+      `SELECT DISTINCT cr.student_id
+       FROM request_group_members rgm
+       JOIN course_requests cr ON cr.id = rgm.request_id
+       WHERE rgm.group_id = ?`,
+      [course.request_group_id]
+    );
+    return rows.map((row) => row.student_id);
+  }
+
+  const requestId = course.origin_request_id || course.request_id;
+  if (!requestId) return [];
+
+  const [rows] = await conn.query(
+    'SELECT DISTINCT student_id FROM course_requests WHERE id = ?',
+    [requestId]
+  );
+  return rows.map((row) => row.student_id);
+}
+
+async function validateInstructorCanUseRequest(conn, requestId, instructorId) {
+  const [[match]] = await conn.query(
+    `SELECT m.*
+     FROM matches m
+     WHERE m.request_id = ? AND m.instructor_id = ? AND m.status = 'accepted'
+     LIMIT 1`,
+    [requestId, instructorId]
+  );
+  if (!match) throw new AppError('Voce nao tem permissao para criar curso para este pedido.', 403);
+  return match;
+}
+
+async function validateInstructorCanUseGroup(conn, groupId, instructorId) {
+  const [[group]] = await conn.query(
+    'SELECT id, topic_tag FROM request_groups WHERE id = ? LIMIT 1',
+    [groupId]
+  );
+  if (!group) throw new AppError('Grupo de pedidos nao encontrado.', 404);
+
+  const [[expertise]] = await conn.query(
+    'SELECT id FROM instructor_expertise WHERE instructor_id = ? AND topic_tag = ? LIMIT 1',
+    [instructorId, group.topic_tag]
+  );
+  if (!expertise) throw new AppError('Este grupo nao corresponde as suas areas de conhecimento.', 403);
+
+  return group;
+}
+
+const createCourse = asyncHandler(async (req, res) => {
+  const {
+    request_id,
+    origin_request_id,
+    request_group_id,
+    title,
+    description,
+    video_url,
+    thumbnail_url,
+    duration_minutes,
+    price,
+    format,
+  } = req.body;
   const instructorId = req.user.id;
+  const originRequestId = origin_request_id || request_id || null;
+  const conn = await db.getConnection();
 
-  const [[match]] = await db.query(
-    `SELECT m.* FROM matches m
-     JOIN course_requests cr ON cr.id = m.request_id
-     WHERE cr.id = ? AND m.instructor_id = ? AND m.status = 'accepted'`,
-    [request_id, instructorId]
-  );
-  if (!match) throw new AppError('Voce nao tem permissao para entregar este curso.', 403);
+  try {
+    await conn.beginTransaction();
 
-  const [result] = await db.query(
-    `INSERT INTO courses
-       (request_id, instructor_id, title, description, format, video_url,
-        thumbnail_url, duration_minutes, price, status, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', NOW())`,
-    [
-      request_id,
-      instructorId,
-      title,
-      description,
-      match.final_format || 'recorded',
-      video_url,
-      thumbnail_url,
-      duration_minutes,
-      price,
-    ]
-  );
+    let match = null;
+    if (originRequestId) {
+      match = await validateInstructorCanUseRequest(conn, originRequestId, instructorId);
+    }
+    if (request_group_id) {
+      await validateInstructorCanUseGroup(conn, request_group_id, instructorId);
+    }
+    if (!originRequestId && !request_group_id) {
+      throw new AppError('Informe origin_request_id/request_id ou request_group_id.', 422);
+    }
 
-  await db.query("UPDATE course_requests SET status = 'concluido' WHERE id = ?", [request_id]);
+    const effectiveFormat = format || match?.final_format || 'recorded';
+    const [result] = await conn.query(
+      `INSERT INTO courses
+         (request_id, origin_request_id, request_group_id, instructor_id, title, description,
+          format, video_url, thumbnail_url, duration_minutes, price, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,
+      [
+        originRequestId,
+        originRequestId,
+        request_group_id || null,
+        instructorId,
+        title,
+        description,
+        effectiveFormat === 'live' ? 'live' : 'recorded',
+        video_url || null,
+        thumbnail_url || null,
+        duration_minutes || null,
+        price || 0,
+      ]
+    );
 
-  const [[request]] = await db.query('SELECT student_id FROM course_requests WHERE id = ?', [request_id]);
-  await db.query(
-    'INSERT IGNORE INTO enrollments (student_id, course_id) VALUES (?, ?)',
-    [request.student_id, result.insertId]
-  );
+    const [[course]] = await conn.query('SELECT * FROM courses WHERE id = ?', [result.insertId]);
+    const interested = await resolveInterestedStudents(conn, course);
+    await conn.commit();
 
-  res.status(201).json({ course_id: result.insertId });
+    res.status(201).json(courseToApi(course, interested.length, 0));
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+});
+
+const publishCourse = asyncHandler(async (req, res) => {
+  const courseId = req.params.id;
+  const instructorId = req.user.id;
+  const conn = await db.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    const [[course]] = await conn.query(
+      'SELECT * FROM courses WHERE id = ? AND instructor_id = ? FOR UPDATE',
+      [courseId, instructorId]
+    );
+    if (!course) throw new AppError('Curso nao encontrado para este instrutor.', 404);
+    if (course.status === 'archived') throw new AppError('Curso arquivado nao pode ser publicado.', 409);
+
+    const studentIds = await resolveInterestedStudents(conn, course);
+    if (studentIds.length) {
+      await conn.query(
+        'INSERT IGNORE INTO enrollments (student_id, course_id) VALUES ?',
+        [studentIds.map((studentId) => [studentId, course.id])]
+      );
+      await conn.query(
+        `INSERT INTO notifications (user_type, user_id, type, title, body)
+         VALUES ?`,
+        [studentIds.map((studentId) => [
+          'student',
+          studentId,
+          'course_published',
+          'Seu microcurso foi publicado',
+          `O curso "${course.title}" ja esta disponivel em Meus cursos.`,
+        ])]
+      );
+    }
+
+    if (course.request_group_id) {
+      await conn.query(
+        `UPDATE course_requests cr
+         JOIN request_group_members rgm ON rgm.request_id = cr.id
+         SET cr.status = 'concluido'
+         WHERE rgm.group_id = ?`,
+        [course.request_group_id]
+      );
+    } else if (course.origin_request_id || course.request_id) {
+      await conn.query(
+        "UPDATE course_requests SET status = 'concluido' WHERE id = ?",
+        [course.origin_request_id || course.request_id]
+      );
+    }
+
+    await conn.query(
+      "UPDATE courses SET status = 'published', published_at = COALESCE(published_at, NOW()) WHERE id = ?",
+      [course.id]
+    );
+
+    const [[published]] = await conn.query('SELECT * FROM courses WHERE id = ?', [course.id]);
+    const [[enrolled]] = await conn.query(
+      'SELECT COUNT(*) AS total FROM enrollments WHERE course_id = ?',
+      [course.id]
+    );
+
+    await conn.commit();
+    res.json(courseToApi(published, studentIds.length, enrolled.total));
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 });
 
 const listPublic = asyncHandler(async (req, res) => {
   const { topic, page = 1, limit = 12 } = req.query;
   const offset = (Number(page) - 1) * Number(limit);
   const params = [];
-  let where = "WHERE c.status IN ('published', 'public')";
+  let where = "WHERE c.status = 'published'";
 
   if (topic) {
     where += ' AND (c.title LIKE ? OR c.description LIKE ?)';
@@ -56,7 +210,7 @@ const listPublic = asyncHandler(async (req, res) => {
 
   const [rows] = await db.query(
     `SELECT c.id, c.title, c.description, c.format, c.duration_minutes,
-            c.price, c.thumbnail_url, c.published_at,
+            c.price, c.thumbnail_url, c.published_at, c.status,
             i.name AS instructor_name, i.rating_avg AS instructor_rating
      FROM courses c
      JOIN instructors i ON i.id = c.instructor_id
@@ -83,7 +237,7 @@ const getCourse = asyncHandler(async (req, res) => {
 const myCourses = asyncHandler(async (req, res) => {
   const [rows] = await db.query(
     `SELECT c.id, c.title, c.format, c.duration_minutes, c.thumbnail_url,
-            cr.topic_tag,
+            cr.topic_tag, c.status,
             COALESCE(p.percent_complete, 0) AS progress,
             p.last_position_sec, e.enrolled_at
      FROM enrollments e
@@ -121,4 +275,4 @@ const saveProgress = asyncHandler(async (req, res) => {
   res.json({ percent_complete: percent.toFixed(2) });
 });
 
-module.exports = { publishCourse, listPublic, getCourse, myCourses, saveProgress };
+module.exports = { createCourse, publishCourse, listPublic, getCourse, myCourses, saveProgress };

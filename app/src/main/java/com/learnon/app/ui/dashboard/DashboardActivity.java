@@ -125,13 +125,13 @@ public class DashboardActivity extends AppCompatActivity {
         TextView titulo = new TextView(this);
         titulo.setText(pedido.getTitle());
         titulo.setTextSize(15);
-        titulo.setTextColor(0xFF1c2b3a);
+        titulo.setTextColor(0xFFECEEF9);
         titulo.setTypeface(null, android.graphics.Typeface.BOLD);
 
         TextView tag = new TextView(this);
         tag.setText(pedido.getTopicTag());
         tag.setTextSize(12);
-        tag.setTextColor(0xFF7a7060);
+        tag.setTextColor(0xFFB4B4C3);
 
         TextView status = new TextView(this);
         status.setText(traduzirStatus(pedido.getStatus()));
@@ -157,13 +157,21 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private int statusCor(String status) {
-        if (status == null) return 0xFF7a7060;
+        if (status == null) return 0xFFB4B4C3;
         switch (status) {
-            case "pending":       return 0xFFc8963e;
-            case "matched":       return 0xFF2a7a6e;
-            case "in_production": return 0xFF1c2b3a;
-            case "delivered":     return 0xFF2a7a6e;
-            default:              return 0xFF7a7060;
+            case "pending":
+            case "aguardando_match":
+            case "aguardando_instrutor":
+                return 0xFF4937A6;
+            case "matched":
+            case "em_andamento":
+            case "in_production":
+                return 0xFF4937A6;
+            case "delivered":
+            case "concluido":
+                return 0xFF6B5CFF;
+            default:
+                return 0xFFB4B4C3;
         }
     }
 }

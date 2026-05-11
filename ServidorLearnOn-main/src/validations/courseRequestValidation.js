@@ -17,12 +17,12 @@ const createRequest = [
 ];
 
 const requestId = [
-  param('id').isUUID().withMessage('ID invalido.'),
+  param('id').isInt({ min: 1 }).withMessage('ID invalido.'),
   validate,
 ];
 
 const updateStatus = [
-  param('id').isUUID().withMessage('ID invalido.'),
+  param('id').isInt({ min: 1 }).withMessage('ID invalido.'),
   body('status').isIn(statuses).withMessage('Status invalido.'),
   validate,
 ];

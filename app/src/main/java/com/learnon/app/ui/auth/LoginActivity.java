@@ -98,7 +98,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     Student student = response.body();
-                    session.salvarToken(student.getToken());
+                    session.salvarTokens(student.getToken(), student.getRefreshToken());
                     session.salvarNome(student.getName());
                     irParaDashboard();
                 } else {

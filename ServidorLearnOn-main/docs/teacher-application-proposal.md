@@ -14,7 +14,19 @@ Restrito a `admin`. Lista candidaturas.
 
 `PATCH /api/teacher-applications/:id/status`
 
-Restrito a `admin`. Aprova ou rejeita candidaturas.
+Restrito a `admin`. Aprova ou rejeita candidaturas. Ao aprovar, cria ou atualiza a conta em `instructors` e copia areas para `instructor_expertise`.
+
+Payload de aprovacao:
+
+```json
+{
+  "status": "approved",
+  "review_notes": "Perfil validado.",
+  "temporary_password": "senha-temporaria-123"
+}
+```
+
+Se `temporary_password` nao for enviado, o backend usa `DEFAULT_INSTRUCTOR_TEMP_PASSWORD` ou `senha-teste-123`.
 
 ## Payload JSON
 
@@ -52,5 +64,5 @@ Rode `database/migrations/002_teacher_applications.sql` na VM.
 1. Candidato envia a candidatura.
 2. Admin revisa documentos e certificados.
 3. Admin aprova ou rejeita a candidatura.
-4. Depois da aprovacao, crie uma conta em `instructors` ou implemente convite/definicao de senha.
-5. Areas selecionadas podem virar linhas em `instructor_expertise` quando a conta de instrutor for criada.
+4. Ao aprovar, o backend cria a conta em `instructors`.
+5. Areas selecionadas viram linhas em `instructor_expertise`, liberando o match automatico.

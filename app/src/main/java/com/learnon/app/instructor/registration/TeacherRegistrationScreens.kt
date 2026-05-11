@@ -307,7 +307,7 @@ fun TeacherRegistrationSuccessScreen(onDone: () -> Unit) {
                     .background(Color(0xFF16A34A).copy(alpha = 0.16f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Color(0xFF5EEAD4), modifier = Modifier.size(54.dp))
+                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Color(0xFF6B5CFF), modifier = Modifier.size(54.dp))
             }
             Spacer(Modifier.height(22.dp))
             Text("Candidatura enviada", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -330,7 +330,7 @@ private fun RegistrationHero() {
     Surface(
         shape = RoundedCornerShape(8.dp),
         color = Color.Transparent,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.28f)),
     ) {
         Column(
             Modifier
@@ -339,8 +339,8 @@ private fun RegistrationHero() {
                     Brush.linearGradient(
                         listOf(
                             Color(0xFF172033),
-                            Color(0xFF111827),
-                            Color(0xFF121826),
+                            Color(0xFF080C16),
+                            Color(0xFF0F1222),
                         )
                     )
                 )
@@ -366,7 +366,7 @@ private fun FormSection(title: String, icon: ImageVector, content: @Composable C
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                 Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             content()
@@ -432,10 +432,10 @@ private fun ProfilePreview(uri: String?, fullName: String) {
             .size(82.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape),
+            .border(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(if (uri == null) initials else "OK", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(if (uri == null) initials else "OK", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
     }
 }
 

@@ -22,10 +22,15 @@ const respond = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+const claimRequest = asyncHandler(async (req, res) => {
+  const result = await matchService.claimRequest(req.params.id, req.user.id);
+  res.status(201).json(result);
+});
+
 const confirmFormat = asyncHandler(async (req, res) => {
   const { format } = req.body;
   await db.query('UPDATE matches SET final_format = ? WHERE id = ?', [format, req.params.id]);
   res.json({ message: 'Formato confirmado.', final_format: format });
 });
 
-module.exports = { listPendingMatches, respond, confirmFormat };
+module.exports = { listPendingMatches, respond, claimRequest, confirmFormat };

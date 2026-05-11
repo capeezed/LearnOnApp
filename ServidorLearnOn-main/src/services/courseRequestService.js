@@ -52,7 +52,7 @@ async function listMine(studentId) {
 
 async function getMine(studentId, id) {
   const [[row]] = await db.query(
-    `SELECT cr.*, qs.total_score, qs.explanation
+    `SELECT cr.*, qs.total_score
      FROM course_requests cr
      LEFT JOIN queue_scores qs ON qs.request_id = cr.id
      WHERE cr.id = ? AND cr.student_id = ?`,
@@ -86,6 +86,53 @@ async function listQueue(queue, limit) {
   }));
 }
 
+async function listQueueForInstructor(queue, limit, instructorId) {
+  const queueType = String(queue || 'normal').toLowerCase().replace('-', '_') === 'fast_track'
+    ? 'fast_track'
+    : 'normal';
+  const [expertiseRows] = await db.query(
+    'SELECT topic_tag FROM instructor_expertise WHERE instructor_id = ?',
+    [instructorId]
+  );
+
+  if (!expertiseRows.length) {
+    const [[instructor]] = await db.query('SELECT email FROM instructors WHERE id = ?', [instructorId]);
+    const [applicationAreas] = await db.query(
+      `SELECT LOWER(taa.area) AS topic_tag
+       FROM teacher_applications ta
+       JOIN teacher_application_areas taa ON taa.application_id = ta.id
+       WHERE ta.email = ? AND ta.status = 'approved'`,
+      [instructor?.email]
+    );
+    if (applicationAreas.length) {
+      await db.query(
+        'INSERT IGNORE INTO instructor_expertise (instructor_id, topic_tag) VALUES ?',
+        [applicationAreas.map((item) => [instructorId, item.topic_tag])]
+      );
+    }
+  }
+
+  const [rows] = await db.query(
+    `SELECT cr.*, qs.total_score, qs.queue_type, s.name AS student_name
+     FROM course_requests cr
+     LEFT JOIN queue_scores qs ON qs.request_id = cr.id
+     JOIN students s ON s.id = cr.student_id
+     JOIN instructor_expertise ie ON ie.topic_tag = cr.topic_tag AND ie.instructor_id = ?
+     WHERE cr.queue_type = ? AND cr.status IN (?, ?)
+       AND NOT EXISTS (
+         SELECT 1 FROM matches m
+         WHERE m.request_id = cr.id AND m.status = 'accepted'
+       )
+     ORDER BY cr.priority_score DESC, cr.created_at ASC
+     LIMIT ?`,
+    [instructorId, queueType, ...priorityService.OPEN_STATUSES, Number(limit || 20)]
+  );
+  return rows.map((row) => ({
+    ...requestToApi(row),
+    student: { name: row.student_name },
+  }));
+}
+
 module.exports = {
   create,
   listMine,
@@ -93,4 +140,5 @@ module.exports = {
   updateStatus,
   recalculate,
   listQueue,
+  listQueueForInstructor,
 };

@@ -10,6 +10,7 @@ import com.learnon.app.instructor.domain.model.InstructorQuestion
 import com.learnon.app.instructor.domain.model.InstructorRequest
 import com.learnon.app.instructor.domain.model.InstructorReview
 import com.learnon.app.instructor.domain.model.InstructorSchedule
+import com.learnon.app.instructor.domain.model.InstructorVideo
 
 interface InstructorRepository {
     suspend fun login(email: String, password: String): Result<Unit>
@@ -18,8 +19,12 @@ interface InstructorRepository {
     suspend fun queueRequests(): Result<List<InstructorRequest>>
     suspend fun acceptRequest(matchId: String): Result<Unit>
     suspend fun rejectRequest(matchId: String): Result<Unit>
-    suspend fun createCourse(requestId: String?, title: String, description: String): Result<Unit>
+    suspend fun createCourse(requestId: String?, title: String, description: String, format: String, durationMinutes: Int, price: Double): Result<Unit>
     suspend fun createdCourses(): Result<List<InstructorCourse>>
+    suspend fun courseVideos(courseId: String): Result<List<InstructorVideo>>
+    suspend fun uploadCourseVideo(courseId: String, title: String, description: String, orderIndex: Int, videoUri: android.net.Uri): Result<Unit>
+    suspend fun updateCourseVideo(videoId: String, title: String, description: String, orderIndex: Int): Result<Unit>
+    suspend fun deleteCourseVideo(videoId: String): Result<Unit>
     suspend fun schedules(): Result<List<InstructorSchedule>>
     suspend fun createSchedule(courseId: String, scheduledAt: String, durationMin: Int, meetingUrl: String?): Result<Unit>
     suspend fun questions(courseId: String? = null): Result<List<InstructorQuestion>>

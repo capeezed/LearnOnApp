@@ -71,4 +71,44 @@ async function respondToMatch(matchId, instructorId, accepted) {
   return { message: 'Match aceito.', request_id: match.request_id };
 }
 
-module.exports = { attemptMatch, respondToMatch };
+async function claimRequest(requestId, instructorId) {
+  const [[request]] = await db.query(
+    `SELECT *
+     FROM course_requests
+     WHERE id = ? AND status IN ('aguardando_match', 'aguardando_instrutor')`,
+    [requestId]
+  );
+  if (!request) throw new AppError('Pedido indisponivel para este instrutor.', 404);
+
+  const [[instructor]] = await db.query(
+    `SELECT i.id
+     FROM instructors i
+     JOIN instructor_expertise ie ON ie.instructor_id = i.id
+     WHERE i.id = ? AND i.is_active = TRUE AND ie.topic_tag = ?
+     LIMIT 1`,
+    [instructorId, request.topic_tag]
+  );
+  if (!instructor) throw new AppError('Este pedido nao corresponde as suas areas de conhecimento.', 403);
+
+  const [[existingAccepted]] = await db.query(
+    "SELECT id FROM matches WHERE request_id = ? AND status = 'accepted' LIMIT 1",
+    [requestId]
+  );
+  if (existingAccepted) throw new AppError('Pedido ja foi aceito por outro instrutor.', 409);
+
+  const expiresAt = new Date(Date.now() + ACCEPT_WINDOW_HOURS * 60 * 60 * 1000);
+  const [previous] = await db.query('SELECT id FROM matches WHERE request_id = ?', [requestId]);
+  const [result] = await db.query(
+    `INSERT INTO matches (request_id, instructor_id, expires_at, match_attempt)
+     VALUES (?, ?, ?, ?)`,
+    [requestId, instructorId, expiresAt, previous.length + 1]
+  );
+
+  await db.query("UPDATE matches SET status = 'accepted', accepted_at = NOW() WHERE id = ?", [result.insertId]);
+  await db.query("UPDATE course_requests SET status = 'em_andamento' WHERE id = ?", [requestId]);
+  await db.query('UPDATE instructors SET active_matches = COALESCE(active_matches, 0) + 1 WHERE id = ?', [instructorId]);
+
+  return { message: 'Pedido assumido.', match_id: result.insertId, request_id: Number(requestId) };
+}
+
+module.exports = { attemptMatch, respondToMatch, claimRequest };

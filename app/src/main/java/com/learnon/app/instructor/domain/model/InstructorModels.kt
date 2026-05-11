@@ -31,6 +31,17 @@ data class InstructorCourse(
     val revenue: String,
 )
 
+data class InstructorVideo(
+    val id: String,
+    val courseId: String,
+    val title: String,
+    val description: String,
+    val videoUrl: String,
+    val thumbnailUrl: String?,
+    val duration: Int,
+    val orderIndex: Int,
+)
+
 data class InstructorSchedule(
     val id: String,
     val courseTitle: String,

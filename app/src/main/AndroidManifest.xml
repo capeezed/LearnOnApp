@@ -46,6 +46,14 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.cursos.CourseVideosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.cursos.VideoPlayerActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.agenda.AgendaActivity"
             android:exported="false" />
 

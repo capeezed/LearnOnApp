@@ -1,6 +1,8 @@
 package com.learnon.app.instructor.data.repository
 
 import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import com.learnon.app.instructor.data.remote.AnswerRequestDto
 import com.learnon.app.instructor.data.remote.CreateCourseRequestDto
 import com.learnon.app.instructor.data.remote.CreateScheduleRequestDto
@@ -8,6 +10,7 @@ import com.learnon.app.instructor.data.remote.InstructorApi
 import com.learnon.app.instructor.data.remote.InstructorLoginRequestDto
 import com.learnon.app.instructor.data.remote.InstructorTokenStore
 import com.learnon.app.instructor.data.remote.MatchResponseRequestDto
+import com.learnon.app.instructor.data.remote.UpdateCourseVideoRequestDto
 import com.learnon.app.instructor.domain.model.InstructorAnalytics
 import com.learnon.app.instructor.domain.model.InstructorCourse
 import com.learnon.app.instructor.domain.model.InstructorDashboard
@@ -19,10 +22,14 @@ import com.learnon.app.instructor.domain.model.InstructorQuestion
 import com.learnon.app.instructor.domain.model.InstructorRequest
 import com.learnon.app.instructor.domain.model.InstructorReview
 import com.learnon.app.instructor.domain.model.InstructorSchedule
+import com.learnon.app.instructor.domain.model.InstructorVideo
 import com.learnon.app.instructor.domain.repository.InstructorRepository
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class InstructorRepositoryImpl(
-    context: Context,
+    private val context: Context,
     private val api: InstructorApi,
 ) : InstructorRepository {
     private val tokenStore = InstructorTokenStore(context.applicationContext)
@@ -36,21 +43,22 @@ class InstructorRepositoryImpl(
     }
 
     override suspend fun dashboard(): Result<InstructorDashboard> = runCatching {
-        val requests = pendingRequests().getOrElse { mockRequests() }
-        val schedules = schedules().getOrElse { mockSchedules() }
-        val notifications = notifications().getOrElse { mockNotifications() }
-        val delivered = createdCourses().getOrElse { mockCourses() }
-        val reviews = reviews().getOrElse { mockReviews() }
-        val finance = finance().getOrElse { mockFinance() }
+        val response = api.dashboard()
+        if (!response.isSuccessful) error("Dashboard indisponivel (${response.code()}).")
+        val metrics = response.body()?.metrics.orEmpty().map {
+            InstructorMetric(
+                label = it.label.orEmpty(),
+                value = it.value.orEmpty(),
+                delta = it.delta.orEmpty(),
+            )
+        }
+        val requests = pendingRequests().getOrElse { emptyList() }
+        val schedules = schedules().getOrElse { emptyList() }
+        val notifications = notifications().getOrElse { emptyList() }
+        val delivered = createdCourses().getOrElse { emptyList() }
 
         InstructorDashboard(
-            metrics = listOf(
-                InstructorMetric("Pedidos pendentes", requests.size.toString(), "matchmaking ativo"),
-                InstructorMetric("Cursos entregues", delivered.size.toString(), "microcursos publicados"),
-                InstructorMetric("Aceitacao", "82%", "ultimos 30 dias"),
-                InstructorMetric("Avaliacao media", reviews.map { it.rating }.average().takeIf { !it.isNaN() }?.let { "%.1f".format(it) } ?: "4.8", "sinal de confianca"),
-                InstructorMetric("Faturamento", finance.totalRevenue, "sob demanda"),
-            ),
+            metrics = metrics,
             pendingRequests = requests.take(4),
             deliveredCourses = delivered.take(3),
             upcomingSchedules = schedules.take(3),
@@ -74,7 +82,7 @@ class InstructorRepositoryImpl(
                 deadline = it.expiresAt,
                 studentName = it.studentName,
                 interestedStudents = 1,
-                difficulty = "A estimar",
+                difficulty = "Calculada pelo match",
             )
         }
     }
@@ -84,7 +92,7 @@ class InstructorRepositoryImpl(
         if (!response.isSuccessful) error("Fila indisponivel (${response.code()}).")
         response.body().orEmpty().map {
             InstructorRequest(
-                id = (it.id ?: 0).toString(),
+                id = "request:${it.id ?: 0}",
                 title = it.title.orEmpty(),
                 description = it.description.orEmpty(),
                 category = it.category ?: it.topicTag ?: "geral",
@@ -97,10 +105,18 @@ class InstructorRepositoryImpl(
                 interestedStudents = 1,
                 difficulty = "A estimar",
             )
-        }.ifEmpty { mockRequests() }
+        }
     }
 
-    override suspend fun acceptRequest(matchId: String): Result<Unit> = respond(matchId, true)
+    override suspend fun acceptRequest(matchId: String): Result<Unit> = runCatching {
+        if (matchId.startsWith("request:")) {
+            val requestId = matchId.removePrefix("request:")
+            val response = api.claimRequest(requestId)
+            if (!response.isSuccessful) error("Nao foi possivel assumir pedido (${response.code()}).")
+        } else {
+            respond(matchId, true).getOrThrow()
+        }
+    }
     override suspend fun rejectRequest(matchId: String): Result<Unit> = respond(matchId, false)
 
     private suspend fun respond(matchId: String, accepted: Boolean): Result<Unit> = runCatching {
@@ -108,22 +124,100 @@ class InstructorRepositoryImpl(
         if (!response.isSuccessful) error("Nao foi possivel responder ao match (${response.code()}).")
     }
 
-    override suspend fun createCourse(requestId: String?, title: String, description: String): Result<Unit> = runCatching {
+    override suspend fun createCourse(requestId: String?, title: String, description: String, format: String, durationMinutes: Int, price: Double): Result<Unit> = runCatching {
+        val cleanRequestId = requestId?.removePrefix("request:")?.toIntOrNull()
         val response = api.createCourse(
             CreateCourseRequestDto(
-                requestId = requestId?.toIntOrNull(),
+                requestId = cleanRequestId,
                 title = title,
                 description = description,
                 videoUrl = null,
                 thumbnailUrl = null,
-                durationMinutes = 12,
-                price = 0.0,
+                durationMinutes = durationMinutes,
+                price = price,
+                format = format,
             )
         )
         if (!response.isSuccessful) error("Nao foi possivel criar curso (${response.code()}).")
+        val courseId = response.body()?.courseId ?: response.body()?.id
+        if (courseId != null) {
+            val publish = api.publishCourse(courseId.toString())
+            if (!publish.isSuccessful) error("Curso criado, mas nao foi possivel publicar (${publish.code()}).")
+        }
     }
 
-    override suspend fun createdCourses(): Result<List<InstructorCourse>> = Result.success(mockCourses())
+    override suspend fun createdCourses(): Result<List<InstructorCourse>> = runCatching {
+        val response = api.createdCourses()
+        if (!response.isSuccessful) error("Cursos indisponiveis (${response.code()}).")
+        response.body().orEmpty().map {
+            InstructorCourse(
+                id = (it.id ?: 0).toString(),
+                title = it.title.orEmpty(),
+                category = it.topicTag ?: "geral",
+                format = it.format ?: "recorded",
+                status = it.status ?: "draft",
+                progressLabel = "${it.interestedStudentsCount ?: 0} alunos interessados",
+                revenue = "R$ %.2f".format(it.price ?: 0.0),
+            )
+        }
+    }
+
+    override suspend fun courseVideos(courseId: String): Result<List<InstructorVideo>> = runCatching {
+        val response = api.courseVideos(courseId)
+        if (!response.isSuccessful) error("Videos indisponiveis (${response.code()}).")
+        response.body().orEmpty().map {
+            InstructorVideo(
+                id = (it.id ?: 0).toString(),
+                courseId = (it.courseId ?: 0).toString(),
+                title = it.title.orEmpty(),
+                description = it.description.orEmpty(),
+                videoUrl = it.videoUrl.orEmpty(),
+                thumbnailUrl = it.thumbnailUrl,
+                duration = it.duration ?: 0,
+                orderIndex = it.orderIndex ?: 0,
+            )
+        }
+    }
+
+    override suspend fun uploadCourseVideo(courseId: String, title: String, description: String, orderIndex: Int, videoUri: Uri): Result<Unit> = runCatching {
+        val resolver = context.contentResolver
+        val bytes = resolver.openInputStream(videoUri)?.use { it.readBytes() } ?: error("Nao foi possivel ler o video selecionado.")
+        val mimeType = resolver.getType(videoUri) ?: "video/mp4"
+        val fileName = fileName(videoUri)
+        val videoBody = bytes.toRequestBody(mimeType.toMediaType())
+        val videoPart = MultipartBody.Part.createFormData("video", fileName, videoBody)
+        val textType = "text/plain".toMediaType()
+
+        val response = api.uploadCourseVideo(
+            id = courseId,
+            video = videoPart,
+            title = title.toRequestBody(textType),
+            description = description.toRequestBody(textType),
+            orderIndex = orderIndex.toString().toRequestBody(textType),
+        )
+        if (!response.isSuccessful) error("Upload de video falhou (${response.code()}).")
+    }
+
+    override suspend fun updateCourseVideo(videoId: String, title: String, description: String, orderIndex: Int): Result<Unit> = runCatching {
+        val response = api.updateCourseVideo(videoId, UpdateCourseVideoRequestDto(title, description, orderIndex))
+        if (!response.isSuccessful) error("Nao foi possivel editar video (${response.code()}).")
+    }
+
+    override suspend fun deleteCourseVideo(videoId: String): Result<Unit> = runCatching {
+        val response = api.deleteCourseVideo(videoId)
+        if (!response.isSuccessful) error("Nao foi possivel excluir video (${response.code()}).")
+    }
+
+    private fun fileName(uri: Uri): String {
+        val cursor = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (index >= 0) return it.getString(index)
+            }
+        }
+        return "learnon-video.mp4"
+    }
 
     override suspend fun schedules(): Result<List<InstructorSchedule>> = runCatching {
         val response = api.schedules()
@@ -136,7 +230,7 @@ class InstructorRepositoryImpl(
                 durationMin = it.durationMin ?: 60,
                 meetingUrl = it.meetingUrl,
             )
-        }.ifEmpty { mockSchedules() }
+        }
     }
 
     override suspend fun createSchedule(courseId: String, scheduledAt: String, durationMin: Int, meetingUrl: String?): Result<Unit> = runCatching {
@@ -152,10 +246,8 @@ class InstructorRepositoryImpl(
     }
 
     override suspend fun questions(courseId: String?): Result<List<InstructorQuestion>> = runCatching {
-        // TODO backend: idealmente expor perguntas do instrutor sem exigir courseId.
-        val id = courseId ?: return@runCatching mockQuestions()
-        val response = api.questions(id)
-        if (!response.isSuccessful) return@runCatching mockQuestions()
+        val response = if (courseId == null) api.instructorQuestions() else api.questions(courseId)
+        if (!response.isSuccessful) error("Perguntas indisponiveis (${response.code()}).")
         response.body().orEmpty().map {
             InstructorQuestion(
                 id = (it.id ?: 0).toString(),
@@ -164,7 +256,7 @@ class InstructorRepositoryImpl(
                 question = it.question.orEmpty(),
                 isResolved = it.isResolved ?: false,
             )
-        }.ifEmpty { mockQuestions() }
+        }
     }
 
     override suspend fun answerQuestion(questionId: String, answer: String): Result<Unit> = runCatching {
@@ -172,65 +264,68 @@ class InstructorRepositoryImpl(
         if (!response.isSuccessful) error("Nao foi possivel responder pergunta (${response.code()}).")
     }
 
-    override suspend fun reviews(): Result<List<InstructorReview>> = Result.success(mockReviews())
-    override suspend fun finance(): Result<InstructorFinance> = Result.success(mockFinance())
-    override suspend fun profile(): Result<InstructorProfile> = Result.success(mockProfile())
-    override suspend fun notifications(): Result<List<InstructorNotification>> = Result.success(mockNotifications())
-    override suspend fun analytics(): Result<InstructorAnalytics> = Result.success(mockAnalytics())
+    override suspend fun reviews(): Result<List<InstructorReview>> = runCatching {
+        val response = api.reviews()
+        if (!response.isSuccessful) error("Avaliacoes indisponiveis (${response.code()}).")
+        response.body().orEmpty().map {
+            InstructorReview(
+                id = (it.id ?: 0).toString(),
+                courseTitle = it.courseTitle ?: "Microcurso",
+                studentName = it.studentName ?: "Aluno",
+                rating = it.rating ?: 0.0,
+                comment = it.comment.orEmpty(),
+            )
+        }
+    }
 
-    private fun mockRequests() = listOf(
-        InstructorRequest("1", "JWT com refresh token seguro", "Aluno quer entender rotacao de refresh token em Express.", "node.js", "live", "fast_track", "aguardando_match", 92.5, "Hoje, 18:00", "Marina", 7, "Intermediaria"),
-        InstructorRequest("2", "Compose Navigation em app real", "Duvida sobre grafo de navegacao e estados compartilhados.", "android", "recorded", "normal", "aguardando_match", 71.2, "Amanha", "Rafael", 4, "Intermediaria"),
-        InstructorRequest("3", "SQL para ranking de pedidos", "Precisa montar score por urgencia e tempo em fila.", "sql", "no_preference", "normal", "aguardando_instrutor", 66.8, "2 dias", "Lia", 5, "Avancada"),
-    )
+    override suspend fun finance(): Result<InstructorFinance> = runCatching {
+        val response = api.finance()
+        if (!response.isSuccessful) error("Financeiro indisponivel (${response.code()}).")
+        val body = response.body()
+        InstructorFinance(
+            totalRevenue = body?.totalRevenue ?: "R$ 0,00",
+            pendingRevenue = body?.pendingRevenue ?: "R$ 0,00",
+            payments = body?.payments.orEmpty(),
+            topCourses = body?.topCourses.orEmpty(),
+        )
+    }
 
-    private fun mockCourses() = listOf(
-        InstructorCourse("18", "Refresh token sem susto", "node.js", "recorded", "published", "Entregue em 14 min", "R$ 420,00"),
-        InstructorCourse("21", "Compose StateFlow na pratica", "android", "recorded", "draft", "Rascunho salvo", "R$ 180,00"),
-        InstructorCourse("22", "Matchmaking com SQL", "sql", "live", "scheduled", "Aula hoje", "R$ 260,00"),
-    )
+    override suspend fun profile(): Result<InstructorProfile> = runCatching {
+        val response = api.profile()
+        if (!response.isSuccessful) error("Perfil indisponivel (${response.code()}).")
+        val body = response.body()
+        InstructorProfile(
+            name = body?.name ?: tokenStore.name(),
+            bio = body?.bio.orEmpty(),
+            specialties = body?.specialties.orEmpty(),
+            socialLinks = body?.socialLinks.orEmpty(),
+            availability = body?.availability.orEmpty(),
+            acceptedFormats = body?.acceptedFormats.orEmpty(),
+        )
+    }
 
-    private fun mockSchedules() = listOf(
-        InstructorSchedule("1", "Matchmaking com SQL", "Hoje 19:30", 45, null),
-        InstructorSchedule("2", "Compose StateFlow na pratica", "Amanha 10:00", 60, null),
-    )
+    override suspend fun notifications(): Result<List<InstructorNotification>> = runCatching {
+        val response = api.notifications()
+        if (!response.isSuccessful) error("Notificacoes indisponiveis (${response.code()}).")
+        response.body().orEmpty().map {
+            InstructorNotification(
+                id = it.id.orEmpty(),
+                title = it.title.orEmpty(),
+                body = it.body.orEmpty(),
+                createdAt = it.createdAt.orEmpty(),
+            )
+        }
+    }
 
-    private fun mockQuestions() = listOf(
-        InstructorQuestion("1", "Refresh token sem susto", "Marina", "Onde eu salvo o refresh token no mobile?", false),
-        InstructorQuestion("2", "Compose StateFlow", "Rafael", "Quando usar collectAsStateWithLifecycle?", true),
-    )
-
-    private fun mockReviews() = listOf(
-        InstructorReview("1", "Refresh token sem susto", "Marina", 5.0, "Direto ao ponto e aplicavel."),
-        InstructorReview("2", "Compose StateFlow", "Rafael", 4.7, "Gostei dos exemplos reais."),
-    )
-
-    private fun mockFinance() = InstructorFinance(
-        totalRevenue = "R$ 3.840,00",
-        pendingRevenue = "R$ 620,00",
-        payments = listOf("Pix previsto em 12/05", "Repasse concluido R$ 840,00"),
-        topCourses = listOf("Refresh token sem susto", "Compose StateFlow", "Matchmaking com SQL"),
-    )
-
-    private fun mockProfile() = InstructorProfile(
-        name = tokenStore.name(),
-        bio = "Instrutor focado em microcursos objetivos para duvidas reais.",
-        specialties = listOf("Node.js", "Android", "SQL", "Arquitetura"),
-        socialLinks = listOf("github.com/learnon-instructor", "linkedin.com/in/learnon"),
-        availability = "Seg a Sex, 18h-22h",
-        acceptedFormats = listOf("Ao vivo", "Gravado"),
-    )
-
-    private fun mockNotifications() = listOf(
-        InstructorNotification("1", "Novo match fast-track", "Pedido de Node.js subiu na fila.", "agora"),
-        InstructorNotification("2", "Pergunta aguardando resposta", "Aluno pediu complemento em um microcurso.", "12 min"),
-        InstructorNotification("3", "Aula ao vivo proxima", "Comeca hoje as 19:30.", "1 h"),
-    )
-
-    private fun mockAnalytics() = InstructorAnalytics(
-        topViewedCourses = listOf("Refresh token sem susto", "Compose StateFlow", "Matchmaking com SQL"),
-        completionRate = "74%",
-        averageResponseTime = "38 min",
-        topCategories = listOf("Node.js", "Android", "SQL"),
-    )
+    override suspend fun analytics(): Result<InstructorAnalytics> = runCatching {
+        val response = api.analytics()
+        if (!response.isSuccessful) error("Analytics indisponivel (${response.code()}).")
+        val body = response.body()
+        InstructorAnalytics(
+            topViewedCourses = body?.topViewedCourses.orEmpty(),
+            completionRate = body?.completionRate ?: "0 cursos",
+            averageResponseTime = body?.averageResponseTime ?: "Sem avaliacoes",
+            topCategories = body?.topCategories.orEmpty(),
+        )
+    }
 }

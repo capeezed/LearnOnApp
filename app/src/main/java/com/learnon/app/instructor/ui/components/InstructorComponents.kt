@@ -68,7 +68,7 @@ fun RequestCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Outlined.Bolt, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
                 Text(request.title, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-                Text("%.0f".format(request.priorityScore), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text("%.0f".format(request.priorityScore), color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
             }
             Text(request.description, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -97,7 +97,7 @@ fun SectionTitle(title: String, action: String? = null, onAction: (() -> Unit)? 
         if (action != null) {
             Text(
                 text = action,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(8.dp),
             )
@@ -143,7 +143,7 @@ fun CenterLoading() {
 
 fun statusColor(status: String): Color = when (status) {
     "fast_track" -> Color(0xFFF59E0B)
-    "em_andamento", "accepted" -> Color(0xFF2563EB)
+    "em_andamento", "accepted" -> Color(0xFF4937A6)
     "concluido", "published" -> Color(0xFF16A34A)
     "cancelado", "declined" -> Color(0xFFDC2626)
     else -> Color(0xFF64748B)

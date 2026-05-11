@@ -22,8 +22,9 @@ async function auth(req, res, next) {
     const table = roleTable[role];
     if (!table) return next(new AppError('Role invalida no token.', 401));
 
+    const activeColumn = role === 'student' ? 'TRUE AS is_active' : 'is_active';
     const [rows] = await db.query(
-      `SELECT id, name, email, is_active FROM ${table} WHERE id = ? LIMIT 1`,
+      `SELECT id, name, email, ${activeColumn} FROM ${table} WHERE id = ? LIMIT 1`,
       [payload.sub || payload.id]
     );
     const user = rows[0];

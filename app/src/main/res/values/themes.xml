@@ -1,8 +1,14 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.LearnOn" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/learnon_background</item>
+        <item name="android:navigationBarColor">@color/learnon_surface</item>
+        <item name="colorPrimary">@color/learnon_primary</item>
+        <item name="colorSecondary">@color/learnon_secondary</item>
+        <item name="android:colorAccent">@color/learnon_primary</item>
+        <item name="android:windowBackground">@color/learnon_background</item>
     </style>
 
     <style name="Theme.LearnOn" parent="Base.Theme.LearnOn" />
