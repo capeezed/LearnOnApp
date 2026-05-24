@@ -18,6 +18,7 @@ import com.learnon.app.utils.SessionManager;
 import java.util.HashMap;
 import java.util.Map;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -115,7 +116,7 @@ public class PedirCursoActivity extends AppCompatActivity {
                     tvSucesso.setText("Pedido enviado com sucesso!");
                     tvSucesso.setVisibility(View.VISIBLE);
                 } else {
-                    mostrarErro("Erro ao enviar pedido. Tente novamente.");
+                    mostrarErro("Erro ao enviar pedido.\n" + lerErro(response.errorBody()));
                 }
             }
 
@@ -167,5 +168,15 @@ public class PedirCursoActivity extends AppCompatActivity {
     private void mostrarErro(String msg) {
         tvErro.setText(msg);
         tvErro.setVisibility(View.VISIBLE);
+    }
+
+    private String lerErro(ResponseBody errorBody) {
+        if (errorBody == null) return "Tente novamente.";
+
+        try {
+            return errorBody.string();
+        } catch (Exception e) {
+            return "Nao foi possivel ler a resposta de erro.";
+        }
     }
 }

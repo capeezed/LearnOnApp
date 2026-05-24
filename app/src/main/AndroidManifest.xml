@@ -46,6 +46,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.cursos.PaymentTestActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.cursos.CourseVideosActivity"
             android:exported="false" />
 

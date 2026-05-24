@@ -10,6 +10,7 @@ const interactionCtrl = require('../controllers/interactionController');
 const teacherApplicationCtrl = require('../controllers/teacherApplicationController');
 const instructorCtrl = require('../controllers/instructorController');
 const videoCtrl = require('../controllers/videoController');
+const paymentCtrl = require('../controllers/paymentController');
 const multer = require('multer');
 
 const authValidation = require('../validations/authValidation');
@@ -72,6 +73,9 @@ router.get('/courses/:id', courseCtrl.getCourse);
 router.post('/courses', auth, role('instrutor'), courseCtrl.createCourse);
 router.post('/courses/:id/publish', auth, role('instrutor'), courseCtrl.publishCourse);
 router.post('/courses/:id/progress', auth, role('aluno'), courseCtrl.saveProgress);
+router.post('/courses/:courseId/payments', auth, role('aluno'), paymentCtrl.createCoursePayment);
+router.get('/payments/:id', auth, role('aluno'), paymentCtrl.getMyPayment);
+router.post('/payments/webhooks/mercado-pago', paymentCtrl.mercadoPagoWebhook);
 router.post('/courses/:id/videos', auth, role('instrutor'), videoUpload.single('video'), videoCtrl.createVideo);
 router.get('/courses/:id/videos', auth, role('aluno', 'instrutor'), videoCtrl.listCourseVideos);
 router.get('/videos/:id', auth, role('aluno', 'instrutor'), videoCtrl.getVideo);

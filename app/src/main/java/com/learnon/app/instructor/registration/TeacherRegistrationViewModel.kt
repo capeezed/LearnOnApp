@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class TeacherRegistrationViewModel(
     private val api: InstructorApi,
@@ -32,7 +33,9 @@ class TeacherRegistrationViewModel(
             val request = form.toRequest()
             runCatching {
                 val response = api.createTeacherApplication(request)
-                if (!response.isSuccessful) error("Nao foi possivel enviar candidatura (${response.code()}).")
+                if (!response.isSuccessful) {
+                    error(formatApiError(response.code(), response.errorBody()?.string()))
+                }
             }
                 .onSuccess { _state.update { it.copy(isLoading = false, isSuccess = true) } }
                 .onFailure { err ->
@@ -66,6 +69,28 @@ class TeacherRegistrationViewModel(
         if (form.documentUri == null) errors["documentUri"] = "Envie um documento para verificacao."
         if (!form.acceptedTerms) errors["acceptedTerms"] = "Aceite os termos para continuar."
         return errors
+    }
+
+    private fun formatApiError(code: Int, rawBody: String?): String {
+        if (rawBody.isNullOrBlank()) return "Nao foi possivel enviar candidatura ($code)."
+
+        return runCatching {
+            val json = JSONObject(rawBody)
+            val details = json.optJSONArray("details")
+            if (details != null && details.length() > 0) {
+                val messages = (0 until details.length()).mapNotNull { index ->
+                    val item = details.optJSONObject(index)
+                    val field = item?.optString("field").orEmpty()
+                    val message = item?.optString("message").orEmpty()
+                    if (message.isBlank()) null else if (field.isBlank()) message else "$field: $message"
+                }
+                if (messages.isNotEmpty()) return@runCatching messages.joinToString("\n")
+            }
+
+            json.optString("error").ifBlank { "Nao foi possivel enviar candidatura ($code)." }
+        }.getOrElse {
+            "Nao foi possivel enviar candidatura ($code).\n$rawBody"
+        }
     }
 }
 

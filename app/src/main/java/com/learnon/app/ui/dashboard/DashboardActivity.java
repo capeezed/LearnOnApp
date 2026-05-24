@@ -15,6 +15,7 @@ import com.learnon.app.data.model.Pedido;
 import com.learnon.app.ui.agenda.AgendaActivity;
 import com.learnon.app.ui.auth.LoginActivity;
 import com.learnon.app.ui.cursos.MeusCursosActivity;
+import com.learnon.app.ui.cursos.PaymentTestActivity;
 import com.learnon.app.ui.pedidos.PedirCursoActivity;
 import com.learnon.app.utils.SessionManager;
 
@@ -27,7 +28,7 @@ import retrofit2.Response;
 public class DashboardActivity extends AppCompatActivity {
 
     private TextView tvBoasVindas, tvSair, tvSemPedidos;
-    private LinearLayout cardMeusCursos, cardAgenda, cardPedirCurso, listaPedidos;
+    private LinearLayout cardMeusCursos, cardAgenda, cardPedirCurso, cardComprarCurso, listaPedidos;
     private SessionManager session;
     private ApiService api;
 
@@ -45,6 +46,7 @@ public class DashboardActivity extends AppCompatActivity {
         cardMeusCursos = findViewById(R.id.cardMeusCursos);
         cardAgenda     = findViewById(R.id.cardAgenda);
         cardPedirCurso = findViewById(R.id.cardPedirCurso);
+        cardComprarCurso = findViewById(R.id.cardComprarCurso);
         listaPedidos   = findViewById(R.id.listaPedidos);
 
         tvBoasVindas.setText("Ola, " + session.getNome() + "!");
@@ -65,6 +67,10 @@ public class DashboardActivity extends AppCompatActivity {
 
         cardPedirCurso.setOnClickListener(v ->
                 startActivity(new Intent(this, PedirCursoActivity.class))
+        );
+
+        cardComprarCurso.setOnClickListener(v ->
+                startActivity(new Intent(this, PaymentTestActivity.class))
         );
 
         carregarPedidos();

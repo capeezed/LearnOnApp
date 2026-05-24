@@ -148,7 +148,27 @@
                     android:text="+ Pedir Curso"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="@color/learnon_primary" />
+                        android:textColor="@color/learnon_primary" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cardComprarCurso"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:background="@drawable/card_bg"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp"
+                android:layout_marginBottom="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Comprar Curso"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/learnon_cta" />
 
             </LinearLayout>
 

@@ -19,6 +19,7 @@ import com.learnon.app.utils.SessionManager;
 import java.util.HashMap;
 import java.util.Map;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -64,8 +65,8 @@ public class CadastroActivity extends AppCompatActivity {
             return;
         }
 
-        if (senha.length() < 6) {
-            mostrarErro("A senha deve ter pelo menos 6 caracteres.");
+        if (senha.length() < 8) {
+            mostrarErro("A senha deve ter pelo menos 8 caracteres.");
             return;
         }
 
@@ -91,7 +92,7 @@ public class CadastroActivity extends AppCompatActivity {
                     startActivity(new Intent(CadastroActivity.this, DashboardActivity.class));
                     finish();
                 } else {
-                    mostrarErro("Erro ao criar conta. Tente novamente.");
+                    mostrarErro("Erro ao criar conta.\n" + lerErro(response.errorBody()));
                 }
             }
 
@@ -107,5 +108,15 @@ public class CadastroActivity extends AppCompatActivity {
     private void mostrarErro(String msg) {
         tvErro.setText(msg);
         tvErro.setVisibility(View.VISIBLE);
+    }
+
+    private String lerErro(ResponseBody errorBody) {
+        if (errorBody == null) return "Tente novamente.";
+
+        try {
+            return errorBody.string();
+        } catch (Exception e) {
+            return "Nao foi possivel ler a resposta de erro.";
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.learnon.app.data.api;
 
 import com.learnon.app.data.model.Aula;
+import com.learnon.app.data.model.CoursePayment;
 import com.learnon.app.data.model.CourseVideo;
 import com.learnon.app.data.model.Curso;
 import com.learnon.app.data.model.Pedido;
@@ -35,6 +36,18 @@ public interface ApiService {
 
     @GET("courses/my")
     Call<List<Curso>> meusCursos(@Header("Authorization") String token);
+
+    @POST("courses/{courseId}/payments")
+    Call<CoursePayment> criarPagamentoCurso(
+            @Header("Authorization") String token,
+            @Path("courseId") int courseId
+    );
+
+    @GET("payments/{id}")
+    Call<CoursePayment> pagamento(
+            @Header("Authorization") String token,
+            @Path("id") long paymentId
+    );
 
     @GET("schedules")
     Call<List<Aula>> minhaAgenda(@Header("Authorization") String token);

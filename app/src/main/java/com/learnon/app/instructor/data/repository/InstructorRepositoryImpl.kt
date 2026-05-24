@@ -27,6 +27,7 @@ import com.learnon.app.instructor.domain.repository.InstructorRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Response
 
 class InstructorRepositoryImpl(
     private val context: Context,
@@ -36,7 +37,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
         val response = api.login(InstructorLoginRequestDto(email, password))
-        if (!response.isSuccessful) error("Login de instrutor falhou (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Login de instrutor falhou", response))
         val body = response.body() ?: error("Resposta vazia.")
         val token = body.accessToken ?: body.token ?: error("Token nao retornado.")
         tokenStore.save(token, body.refreshToken, body.name ?: body.instructor?.name)
@@ -44,7 +45,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun dashboard(): Result<InstructorDashboard> = runCatching {
         val response = api.dashboard()
-        if (!response.isSuccessful) error("Dashboard indisponivel (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Dashboard indisponivel", response))
         val metrics = response.body()?.metrics.orEmpty().map {
             InstructorMetric(
                 label = it.label.orEmpty(),
@@ -68,7 +69,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun pendingRequests(): Result<List<InstructorRequest>> = runCatching {
         val response = api.pendingMatches()
-        if (!response.isSuccessful) error("Nao foi possivel carregar matches (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel carregar matches", response))
         response.body().orEmpty().map {
             InstructorRequest(
                 id = (it.id ?: it.requestId ?: 0).toString(),
@@ -89,7 +90,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun queueRequests(): Result<List<InstructorRequest>> = runCatching {
         val response = api.requestQueue()
-        if (!response.isSuccessful) error("Fila indisponivel (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Fila indisponivel", response))
         response.body().orEmpty().map {
             InstructorRequest(
                 id = "request:${it.id ?: 0}",
@@ -112,7 +113,7 @@ class InstructorRepositoryImpl(
         if (matchId.startsWith("request:")) {
             val requestId = matchId.removePrefix("request:")
             val response = api.claimRequest(requestId)
-            if (!response.isSuccessful) error("Nao foi possivel assumir pedido (${response.code()}).")
+            if (!response.isSuccessful) error(apiError("Nao foi possivel assumir pedido", response))
         } else {
             respond(matchId, true).getOrThrow()
         }
@@ -121,7 +122,7 @@ class InstructorRepositoryImpl(
 
     private suspend fun respond(matchId: String, accepted: Boolean): Result<Unit> = runCatching {
         val response = api.respondToMatch(matchId, MatchResponseRequestDto(accepted))
-        if (!response.isSuccessful) error("Nao foi possivel responder ao match (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel responder ao match", response))
     }
 
     override suspend fun createCourse(requestId: String?, title: String, description: String, format: String, durationMinutes: Int, price: Double): Result<Unit> = runCatching {
@@ -138,17 +139,17 @@ class InstructorRepositoryImpl(
                 format = format,
             )
         )
-        if (!response.isSuccessful) error("Nao foi possivel criar curso (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel criar curso", response))
         val courseId = response.body()?.courseId ?: response.body()?.id
         if (courseId != null) {
             val publish = api.publishCourse(courseId.toString())
-            if (!publish.isSuccessful) error("Curso criado, mas nao foi possivel publicar (${publish.code()}).")
+            if (!publish.isSuccessful) error(apiError("Curso criado, mas nao foi possivel publicar", publish))
         }
     }
 
     override suspend fun createdCourses(): Result<List<InstructorCourse>> = runCatching {
         val response = api.createdCourses()
-        if (!response.isSuccessful) error("Cursos indisponiveis (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Cursos indisponiveis", response))
         response.body().orEmpty().map {
             InstructorCourse(
                 id = (it.id ?: 0).toString(),
@@ -164,7 +165,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun courseVideos(courseId: String): Result<List<InstructorVideo>> = runCatching {
         val response = api.courseVideos(courseId)
-        if (!response.isSuccessful) error("Videos indisponiveis (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Videos indisponiveis", response))
         response.body().orEmpty().map {
             InstructorVideo(
                 id = (it.id ?: 0).toString(),
@@ -195,17 +196,17 @@ class InstructorRepositoryImpl(
             description = description.toRequestBody(textType),
             orderIndex = orderIndex.toString().toRequestBody(textType),
         )
-        if (!response.isSuccessful) error("Upload de video falhou (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Upload de video falhou", response))
     }
 
     override suspend fun updateCourseVideo(videoId: String, title: String, description: String, orderIndex: Int): Result<Unit> = runCatching {
         val response = api.updateCourseVideo(videoId, UpdateCourseVideoRequestDto(title, description, orderIndex))
-        if (!response.isSuccessful) error("Nao foi possivel editar video (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel editar video", response))
     }
 
     override suspend fun deleteCourseVideo(videoId: String): Result<Unit> = runCatching {
         val response = api.deleteCourseVideo(videoId)
-        if (!response.isSuccessful) error("Nao foi possivel excluir video (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel excluir video", response))
     }
 
     private fun fileName(uri: Uri): String {
@@ -221,7 +222,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun schedules(): Result<List<InstructorSchedule>> = runCatching {
         val response = api.schedules()
-        if (!response.isSuccessful) error("Agenda indisponivel (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Agenda indisponivel", response))
         response.body().orEmpty().map {
             InstructorSchedule(
                 id = (it.id ?: 0).toString(),
@@ -242,12 +243,12 @@ class InstructorRepositoryImpl(
                 meetingUrl = meetingUrl,
             )
         )
-        if (!response.isSuccessful) error("Nao foi possivel agendar aula (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel agendar aula", response))
     }
 
     override suspend fun questions(courseId: String?): Result<List<InstructorQuestion>> = runCatching {
         val response = if (courseId == null) api.instructorQuestions() else api.questions(courseId)
-        if (!response.isSuccessful) error("Perguntas indisponiveis (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Perguntas indisponiveis", response))
         response.body().orEmpty().map {
             InstructorQuestion(
                 id = (it.id ?: 0).toString(),
@@ -261,12 +262,12 @@ class InstructorRepositoryImpl(
 
     override suspend fun answerQuestion(questionId: String, answer: String): Result<Unit> = runCatching {
         val response = api.answerQuestion(questionId, AnswerRequestDto(answer))
-        if (!response.isSuccessful) error("Nao foi possivel responder pergunta (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Nao foi possivel responder pergunta", response))
     }
 
     override suspend fun reviews(): Result<List<InstructorReview>> = runCatching {
         val response = api.reviews()
-        if (!response.isSuccessful) error("Avaliacoes indisponiveis (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Avaliacoes indisponiveis", response))
         response.body().orEmpty().map {
             InstructorReview(
                 id = (it.id ?: 0).toString(),
@@ -280,7 +281,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun finance(): Result<InstructorFinance> = runCatching {
         val response = api.finance()
-        if (!response.isSuccessful) error("Financeiro indisponivel (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Financeiro indisponivel", response))
         val body = response.body()
         InstructorFinance(
             totalRevenue = body?.totalRevenue ?: "R$ 0,00",
@@ -292,7 +293,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun profile(): Result<InstructorProfile> = runCatching {
         val response = api.profile()
-        if (!response.isSuccessful) error("Perfil indisponivel (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Perfil indisponivel", response))
         val body = response.body()
         InstructorProfile(
             name = body?.name ?: tokenStore.name(),
@@ -306,7 +307,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun notifications(): Result<List<InstructorNotification>> = runCatching {
         val response = api.notifications()
-        if (!response.isSuccessful) error("Notificacoes indisponiveis (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Notificacoes indisponiveis", response))
         response.body().orEmpty().map {
             InstructorNotification(
                 id = it.id.orEmpty(),
@@ -319,7 +320,7 @@ class InstructorRepositoryImpl(
 
     override suspend fun analytics(): Result<InstructorAnalytics> = runCatching {
         val response = api.analytics()
-        if (!response.isSuccessful) error("Analytics indisponivel (${response.code()}).")
+        if (!response.isSuccessful) error(apiError("Analytics indisponivel", response))
         val body = response.body()
         InstructorAnalytics(
             topViewedCourses = body?.topViewedCourses.orEmpty(),
@@ -327,5 +328,14 @@ class InstructorRepositoryImpl(
             averageResponseTime = body?.averageResponseTime ?: "Sem avaliacoes",
             topCategories = body?.topCategories.orEmpty(),
         )
+    }
+
+    private fun apiError(prefix: String, response: Response<*>): String {
+        val body = response.errorBody()?.string()
+        return if (body.isNullOrBlank()) {
+            "$prefix (${response.code()})."
+        } else {
+            "$prefix (${response.code()}).\n$body"
+        }
     }
 }
