@@ -1,12 +1,15 @@
 package com.learnon.app.ui.dashboard;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
@@ -117,36 +120,60 @@ public class DashboardActivity extends AppCompatActivity {
 
     private View criarItemPedido(Pedido pedido) {
         LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setBackground(getDrawable(R.drawable.card_bg));
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setBackground(ContextCompat.getDrawable(this, R.drawable.course_card_bg));
+        row.setElevation(dp(2));
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        params.setMargins(0, 0, 0, 12);
+        params.setMargins(0, 0, 0, dp(12));
         row.setLayoutParams(params);
-        row.setPadding(40, 32, 40, 32);
+        row.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+        TextView marker = new TextView(this);
+        marker.setText(">");
+        marker.setGravity(Gravity.CENTER);
+        marker.setTextSize(18);
+        marker.setTextColor(0xFFECEEF9);
+        marker.setTypeface(null, Typeface.BOLD);
+        marker.setBackground(ContextCompat.getDrawable(this, R.drawable.course_chip_soft_bg));
+        LinearLayout.LayoutParams markerParams = new LinearLayout.LayoutParams(dp(38), dp(38));
+        markerParams.setMargins(0, 0, dp(14), 0);
+        marker.setLayoutParams(markerParams);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setLayoutParams(new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
         TextView titulo = new TextView(this);
-        titulo.setText(pedido.getTitle());
+        titulo.setText(textoOuPadrao(pedido.getTitle(), "Pedido sem titulo"));
         titulo.setTextSize(15);
         titulo.setTextColor(0xFFECEEF9);
-        titulo.setTypeface(null, android.graphics.Typeface.BOLD);
+        titulo.setTypeface(null, Typeface.BOLD);
+        titulo.setMaxLines(2);
 
         TextView tag = new TextView(this);
-        tag.setText(pedido.getTopicTag());
+        tag.setText(textoOuPadrao(pedido.getTopicTag(), "Geral"));
         tag.setTextSize(12);
         tag.setTextColor(0xFFB4B4C3);
+        tag.setPadding(0, dp(4), 0, 0);
 
         TextView status = new TextView(this);
         status.setText(traduzirStatus(pedido.getStatus()));
         status.setTextSize(12);
         status.setTextColor(statusCor(pedido.getStatus()));
+        status.setTypeface(null, Typeface.BOLD);
+        status.setPadding(0, dp(8), 0, 0);
 
-        row.addView(titulo);
-        row.addView(tag);
-        row.addView(status);
+        content.addView(titulo);
+        content.addView(tag);
+        content.addView(status);
+        row.addView(marker);
+        row.addView(content);
 
         return row;
     }
@@ -179,5 +206,13 @@ public class DashboardActivity extends AppCompatActivity {
             default:
                 return 0xFFB4B4C3;
         }
+    }
+
+    private String textoOuPadrao(String texto, String padrao) {
+        return texto == null || texto.trim().isEmpty() ? padrao : texto;
+    }
+
+    private int dp(int valor) {
+        return Math.round(valor * getResources().getDisplayMetrics().density);
     }
 }

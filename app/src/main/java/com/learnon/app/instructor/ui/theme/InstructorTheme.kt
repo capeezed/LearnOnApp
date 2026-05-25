@@ -9,16 +9,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LearnOnBackground = Color(0xFF080C16)
-private val LearnOnSurface = Color(0xFF0F1222)
-private val LearnOnBorder = Color(0xFF363A4F)
+private val LearnOnSurface = Color(0xFF11172A)
+private val LearnOnBorder = Color(0xFF2D3552)
 private val LearnOnText = Color(0xFFECEEF9)
 private val LearnOnTextMuted = Color(0xFFB4B4C3)
 private val LearnOnPurple = Color(0xFF4937A6)
+private val LearnOnPurpleBright = Color(0xFF6B5CFF)
+private val LearnOnOrange = Color(0xFFDE6618)
 
 private val LightColors = lightColorScheme(
     primary = LearnOnPurple,
-    secondary = LearnOnPurple,
-    tertiary = LearnOnPurple,
+    secondary = LearnOnPurpleBright,
+    tertiary = LearnOnOrange,
     background = LearnOnBackground,
     surface = LearnOnSurface,
     surfaceVariant = LearnOnBorder,
@@ -32,8 +34,8 @@ private val LightColors = lightColorScheme(
 
 private val DarkColors = darkColorScheme(
     primary = LearnOnPurple,
-    secondary = LearnOnPurple,
-    tertiary = LearnOnPurple,
+    secondary = LearnOnPurpleBright,
+    tertiary = LearnOnOrange,
     background = LearnOnBackground,
     surface = LearnOnSurface,
     surfaceVariant = LearnOnBorder,

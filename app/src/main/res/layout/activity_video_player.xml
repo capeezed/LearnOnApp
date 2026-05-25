@@ -10,25 +10,29 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@color/learnon_surface"
+        android:elevation="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="24dp"
+        android:paddingStart="18dp"
         android:paddingEnd="24dp">
 
         <TextView
             android:id="@+id/tvVoltar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
             android:text="&lt;"
             android:textColor="@color/learnon_text"
-            android:textSize="20sp" />
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvTituloVideo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
+            android:maxLines="1"
             android:text="Aula"
             android:textColor="@color/learnon_text"
             android:textSize="18sp"
@@ -38,16 +42,34 @@
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="248dp"
         android:background="@color/black"
         app:show_buffering="when_playing"
         app:use_controller="true" />
 
-    <TextView
-        android:id="@+id/tvDescricao"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="24dp"
-        android:textColor="@color/learnon_text_muted"
-        android:textSize="14sp" />
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="Sobre esta aula"
+            android:textColor="@color/learnon_text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDescricao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/course_card_bg"
+            android:padding="18dp"
+            android:textColor="@color/learnon_text_muted"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 </LinearLayout>

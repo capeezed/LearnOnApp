@@ -2,92 +2,117 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/learnon_background">
+    android:background="@color/learnon_background"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:background="@color/learnon_surface"
         android:elevation="4dp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingEnd="24dp">
 
         <TextView
             android:id="@+id/tvVoltar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Voltar"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/learnon_primary"
-            android:padding="8dp" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="&lt;"
+            android:textColor="@color/learnon_text"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
             android:text="Pagamento"
-            android:textSize="18sp"
-            android:textStyle="bold"
             android:textColor="@color/learnon_text"
-            android:gravity="end" />
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:fillViewport="true">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Comprar microcurso"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="@color/learnon_text"
-            android:layout_marginBottom="8dp" />
+            android:orientation="vertical"
+            android:padding="24dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Informe o ID de um curso publicado para abrir o checkout seguro do Mercado Pago."
-            android:textSize="14sp"
-            android:textColor="@color/learnon_text_muted"
-            android:layout_marginBottom="24dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="22dp"
+                android:background="@drawable/course_header_bg"
+                android:orientation="vertical"
+                android:padding="24dp">
 
-        <EditText
-            android:id="@+id/etCourseId"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="ID do curso"
-            android:inputType="number"
-            android:textColor="@color/learnon_text"
-            android:textColorHint="@color/learnon_text_muted"
-            android:background="@drawable/input_bg"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Comprar microcurso"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnComprar"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="Comprar curso"
-            android:textColor="@color/learnon_on_primary"
-            android:background="@drawable/btn_primary" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Informe o ID de um curso publicado para abrir o checkout seguro."
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/tvResultado"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@color/learnon_text_muted"
-            android:paddingTop="24dp" />
+            </LinearLayout>
 
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/course_card_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <EditText
+                    android:id="@+id/etCourseId"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/input_bg"
+                    android:hint="ID do curso"
+                    android:inputType="number"
+                    android:padding="16dp"
+                    android:textColor="@color/learnon_text"
+                    android:textColorHint="@color/learnon_text_muted" />
+
+                <Button
+                    android:id="@+id/btnComprar"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/btn_primary"
+                    android:text="Comprar curso"
+                    android:textColor="@color/learnon_on_primary"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvResultado"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="20dp"
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

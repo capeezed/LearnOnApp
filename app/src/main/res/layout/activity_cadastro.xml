@@ -8,112 +8,131 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:gravity="center"
-        android:padding="32dp"
-        android:minHeight="600dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Criar conta"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="@color/learnon_text"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cadastre-se para começar a aprender."
-            android:textSize="14sp"
-            android:textColor="@color/learnon_text_muted"
-            android:layout_marginBottom="40dp" />
-
-        <EditText
-            android:id="@+id/etNome"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:hint="Nome completo"
-            android:inputType="textPersonName"
-            android:background="@drawable/input_bg"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/learnon_text"
-            android:textColorHint="@color/learnon_text_muted"
-            android:textSize="15sp"
-            android:layout_marginBottom="16dp" />
-
-        <EditText
-            android:id="@+id/etEmail"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:hint="E-mail"
-            android:inputType="textEmailAddress"
-            android:background="@drawable/input_bg"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/learnon_text"
-            android:textColorHint="@color/learnon_text_muted"
-            android:textSize="15sp"
-            android:layout_marginBottom="16dp" />
-
-        <EditText
-            android:id="@+id/etSenha"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:hint="Senha"
-            android:inputType="textPassword"
-            android:background="@drawable/input_bg"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/learnon_text"
-            android:textColorHint="@color/learnon_text_muted"
-            android:textSize="15sp"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tvErro"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="@color/learnon_primary"
-            android:textSize="13sp"
-            android:gravity="center"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnCadastrar"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Criar conta"
-            android:textColor="@color/learnon_text"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:background="@drawable/btn_primary"
-            android:layout_marginBottom="24dp" />
+        android:minHeight="620dp"
+        android:orientation="vertical"
+        android:padding="24dp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/course_header_bg"
+            android:orientation="vertical"
+            android:padding="26dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Já tem uma conta? "
-                android:textColor="@color/learnon_text_muted"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvLogin"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Entrar"
+                android:layout_marginBottom="8dp"
+                android:text="Criar conta"
                 android:textColor="@color/learnon_text"
-                android:textStyle="bold"
-                android:textSize="14sp" />
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Entre no LearnOn e acompanhe seus cursos em um so lugar."
+                android:textColor="@color/learnon_text_muted"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/course_card_bg"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <EditText
+                android:id="@+id/etNome"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/input_bg"
+                android:hint="Nome completo"
+                android:inputType="textPersonName"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/learnon_text"
+                android:textColorHint="@color/learnon_text_muted"
+                android:textSize="15sp" />
+
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/input_bg"
+                android:hint="E-mail"
+                android:inputType="textEmailAddress"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/learnon_text"
+                android:textColorHint="@color/learnon_text_muted"
+                android:textSize="15sp" />
+
+            <EditText
+                android:id="@+id/etSenha"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/input_bg"
+                android:hint="Senha"
+                android:inputType="textPassword"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/learnon_text"
+                android:textColorHint="@color/learnon_text_muted"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvErro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:text=""
+                android:textColor="@color/learnon_error"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnCadastrar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="22dp"
+                android:background="@drawable/btn_primary"
+                android:text="Criar conta"
+                android:textColor="@color/learnon_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ja tem uma conta? "
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvLogin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Entrar"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
