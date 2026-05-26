@@ -40,9 +40,11 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "LEARNON_BASE_URL", "\"https://heterozygous-stephnie-oversweetly.ngrok-free.dev/api/\"")
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"314529283783-4e02qvs62sjtg03sulbnu4sh0v92g3m0.apps.googleusercontent.com\"")
         }
         release {
             buildConfigField("String", "LEARNON_BASE_URL", "\"https://heterozygous-stephnie-oversweetly.ngrok-free.dev/api/\"")
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"314529283783-4e02qvs62sjtg03sulbnu4sh0v92g3m0.apps.googleusercontent.com\"")
         }
     }
 }
@@ -84,6 +86,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-ui:1.5.1")
 

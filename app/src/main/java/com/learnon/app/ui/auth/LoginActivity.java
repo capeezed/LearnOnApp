@@ -7,8 +7,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.learnon.app.BuildConfig;
 import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
@@ -28,9 +35,12 @@ import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private static final int RC_GOOGLE_SIGN_IN = 1001;
+
     private EditText etEmail, etSenha;
     private Button btnEntrar, btnGoogle, btnInstructor;
     private TextView tvErro, tvCadastro;
+    private GoogleSignInClient googleSignInClient;
     private SessionManager session;
     private ApiService api;
 
@@ -56,14 +66,17 @@ public class LoginActivity extends AppCompatActivity {
         tvCadastro = findViewById(R.id.tvCadastro);
 
         api = ApiClient.createService(ApiService.class);
+        googleSignInClient = GoogleSignIn.getClient(
+                this,
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                        .build()
+        );
 
         btnEntrar.setOnClickListener(v -> fazerLogin());
 
-        btnGoogle.setOnClickListener(v -> {
-            String url = BuildConfig.LEARNON_BASE_URL + "auth/google";
-            Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
-            startActivity(intent);
-        });
+        btnGoogle.setOnClickListener(v -> iniciarLoginGoogle());
 
         btnInstructor.setOnClickListener(v ->
                 startActivity(new Intent(this, InstructorDashboardActivity.class))
@@ -72,6 +85,22 @@ public class LoginActivity extends AppCompatActivity {
         tvCadastro.setOnClickListener(v ->
                 startActivity(new Intent(this, CadastroActivity.class))
         );
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode != RC_GOOGLE_SIGN_IN) return;
+
+        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+        try {
+            GoogleSignInAccount account = task.getResult(ApiException.class);
+            loginGoogleNoServidor(account.getIdToken());
+        } catch (ApiException e) {
+            btnGoogle.setEnabled(true);
+            mostrarErro("Nao foi possivel entrar com Google.");
+        }
     }
 
     private void fazerLogin() {
@@ -119,6 +148,45 @@ public class LoginActivity extends AppCompatActivity {
     private void mostrarErro(String msg) {
         tvErro.setText(msg);
         tvErro.setVisibility(View.VISIBLE);
+    }
+
+    private void iniciarLoginGoogle() {
+        btnGoogle.setEnabled(false);
+        tvErro.setVisibility(View.GONE);
+        startActivityForResult(googleSignInClient.getSignInIntent(), RC_GOOGLE_SIGN_IN);
+    }
+
+    private void loginGoogleNoServidor(String idToken) {
+        if (idToken == null || idToken.trim().isEmpty()) {
+            btnGoogle.setEnabled(true);
+            mostrarErro("Google nao retornou um token valido.");
+            return;
+        }
+
+        Map<String, String> body = new HashMap<>();
+        body.put("idToken", idToken);
+
+        api.googleMobileLogin(body).enqueue(new Callback<Student>() {
+            @Override
+            public void onResponse(Call<Student> call, Response<Student> response) {
+                btnGoogle.setEnabled(true);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    Student student = response.body();
+                    session.salvarTokens(student.getToken(), student.getRefreshToken());
+                    session.salvarNome(student.getName());
+                    irParaDashboard();
+                } else {
+                    mostrarErro("Nao foi possivel concluir o login Google.\n" + lerErro(response.errorBody()));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Student> call, Throwable t) {
+                btnGoogle.setEnabled(true);
+                mostrarErro("Erro de conexao ao entrar com Google.");
+            }
+        });
     }
 
     private String lerErro(ResponseBody errorBody) {

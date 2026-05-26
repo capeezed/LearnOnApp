@@ -1,8 +1,12 @@
 package com.learnon.app.ui.dashboard;
 
 import android.content.Intent;
+import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebViewClient;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -17,6 +21,7 @@ import com.learnon.app.data.api.ApiService;
 import com.learnon.app.data.model.Pedido;
 import com.learnon.app.ui.agenda.AgendaActivity;
 import com.learnon.app.ui.auth.LoginActivity;
+import com.learnon.app.ui.chatbot.BotpressWebView;
 import com.learnon.app.ui.cursos.MeusCursosActivity;
 import com.learnon.app.ui.cursos.PaymentTestActivity;
 import com.learnon.app.ui.pedidos.PedirCursoActivity;
@@ -32,6 +37,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private TextView tvBoasVindas, tvSair, tvSemPedidos;
     private LinearLayout cardMeusCursos, cardAgenda, cardPedirCurso, cardComprarCurso, listaPedidos;
+    private BotpressWebView webViewBotpressDashboard;
     private SessionManager session;
     private ApiService api;
 
@@ -50,6 +56,7 @@ public class DashboardActivity extends AppCompatActivity {
         cardAgenda     = findViewById(R.id.cardAgenda);
         cardPedirCurso = findViewById(R.id.cardPedirCurso);
         cardComprarCurso = findViewById(R.id.cardComprarCurso);
+        webViewBotpressDashboard = findViewById(R.id.webViewBotpressDashboard);
         listaPedidos   = findViewById(R.id.listaPedidos);
 
         tvBoasVindas.setText("Ola, " + session.getNome() + "!");
@@ -76,7 +83,21 @@ public class DashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(this, PaymentTestActivity.class))
         );
 
+        configurarBotpressNoDashboard();
+
         carregarPedidos();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webViewBotpressDashboard != null && webViewBotpressDashboard.isChatActive()) {
+            webViewBotpressDashboard.evaluateJavascript(
+                    "window.botpress && window.botpress.close && window.botpress.close();",
+                    value -> webViewBotpressDashboard.setChatActive(false)
+            );
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -210,6 +231,44 @@ public class DashboardActivity extends AppCompatActivity {
 
     private String textoOuPadrao(String texto, String padrao) {
         return texto == null || texto.trim().isEmpty() ? padrao : texto;
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void configurarBotpressNoDashboard() {
+        webViewBotpressDashboard.setBackgroundColor(0x00000000);
+        webViewBotpressDashboard.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
+        WebSettings settings = webViewBotpressDashboard.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setUseWideViewPort(true);
+
+        webViewBotpressDashboard.setWebViewClient(new WebViewClient());
+        webViewBotpressDashboard.setWebChromeClient(new WebChromeClient());
+
+        String html = "<!DOCTYPE html>"
+                + "<html lang=\"pt-BR\">"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                + "<style>"
+                + "html, body { height: 100%; margin: 0; background: transparent; overflow: hidden; }"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<script src=\"https://cdn.botpress.cloud/webchat/v3.6/inject.js\" defer></script>"
+                + "<script src=\"https://files.bpcontent.cloud/2026/05/10/11/20260510115921-COZ7U0ZS.js\" defer></script>"
+                + "</body>"
+                + "</html>";
+
+        webViewBotpressDashboard.loadDataWithBaseURL(
+                "https://cdn.botpress.cloud/",
+                html,
+                "text/html",
+                "UTF-8",
+                null
+        );
     }
 
     private int dp(int valor) {

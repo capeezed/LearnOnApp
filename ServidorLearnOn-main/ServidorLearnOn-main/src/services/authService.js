@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const AppError = require('../utils/AppError');
@@ -131,6 +132,65 @@ async function login({ email, password, role }) {
   };
 }
 
+async function loginGoogleMobile(idToken) {
+  if (!idToken) throw new AppError('Token do Google e obrigatorio.', 422);
+  if (!process.env.GOOGLE_CLIENT_ID) throw new AppError('Google Client ID nao configurado.', 500);
+
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  let ticket;
+
+  try {
+    ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+  } catch {
+    throw new AppError('Token do Google invalido.', 401);
+  }
+
+  const payload = ticket.getPayload();
+  const email = payload?.email;
+  const name = payload?.name || email;
+
+  if (!email || payload.email_verified === false) {
+    throw new AppError('Google nao retornou um e-mail verificado.', 401);
+  }
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [rows] = await conn.query('SELECT * FROM students WHERE email = ? LIMIT 1', [email]);
+    let student = rows[0];
+
+    if (!student) {
+      const [result] = await conn.query(
+        'INSERT INTO students (name, email, password_hash) VALUES (?, ?, ?)',
+        [name, email, 'google-oauth']
+      );
+      student = { id: result.insertId, name, email };
+    }
+
+    const tokens = await issueTokenPair(student, 'student', conn);
+
+    await conn.commit();
+
+    return {
+      token: tokens.accessToken,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: publicUser(student, 'student'),
+      name: student.name,
+      student: publicUser(student, 'student'),
+    };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
 async function refresh(refreshToken) {
   let payload;
   try {
@@ -185,4 +245,4 @@ async function logout(refreshToken) {
   );
 }
 
-module.exports = { register, login, refresh, logout, issueTokenPair };
+module.exports = { register, login, loginGoogleMobile, refresh, logout, issueTokenPair };

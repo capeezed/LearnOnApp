@@ -11,6 +11,11 @@ const loginStudent = asyncHandler(async (req, res) => {
   res.json({ ...result, student: result.user });
 });
 
+const loginGoogleMobile = asyncHandler(async (req, res) => {
+  const result = await authService.loginGoogleMobile(req.body.idToken);
+  res.json({ ...result, student: result.user });
+});
+
 const registerInstructor = asyncHandler(async (req, res) => {
   const result = await authService.register({ ...req.validated, role: 'instrutor' });
   res.status(201).json(result);
@@ -44,6 +49,7 @@ const logout = asyncHandler(async (req, res) => {
 module.exports = {
   registerStudent,
   loginStudent,
+  loginGoogleMobile,
   registerInstructor,
   loginInstructor,
   registerAdmin,

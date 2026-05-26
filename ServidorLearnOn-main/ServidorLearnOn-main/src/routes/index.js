@@ -23,6 +23,7 @@ const videoUpload = multer({
 
 router.post('/auth/students/register', authValidation.register, authCtrl.registerStudent);
 router.post('/auth/students/login', authValidation.login, authCtrl.loginStudent);
+router.post('/auth/google/mobile', authCtrl.loginGoogleMobile);
 router.post('/auth/instructors/register', authValidation.register, authCtrl.registerInstructor);
 router.post('/auth/instructors/login', authValidation.login, authCtrl.loginInstructor);
 router.post('/auth/admin/register', auth, role('admin'), authValidation.register, authCtrl.registerAdmin);

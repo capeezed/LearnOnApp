@@ -25,6 +25,9 @@ public interface ApiService {
     @POST("auth/students/login")
     Call<Student> login(@Body Map<String, String> body);
 
+    @POST("auth/google/mobile")
+    Call<Student> googleMobileLogin(@Body Map<String, String> body);
+
     @POST("auth/refresh")
     Call<Student> refresh(@Body Map<String, String> body);
 
