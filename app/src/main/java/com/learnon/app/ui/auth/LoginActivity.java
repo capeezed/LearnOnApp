@@ -2,6 +2,7 @@ package com.learnon.app.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,6 +37,7 @@ import retrofit2.Response;
 public class LoginActivity extends AppCompatActivity {
 
     private static final int RC_GOOGLE_SIGN_IN = 1001;
+    private static final String TAG = "LoginActivity";
 
     private EditText etEmail, etSenha;
     private Button btnEntrar, btnGoogle, btnInstructor;
@@ -99,7 +101,8 @@ public class LoginActivity extends AppCompatActivity {
             loginGoogleNoServidor(account.getIdToken());
         } catch (ApiException e) {
             btnGoogle.setEnabled(true);
-            mostrarErro("Nao foi possivel entrar com Google.");
+            Log.e(TAG, "Erro no Google Sign-In: statusCode=" + e.getStatusCode(), e);
+            mostrarErro("Nao foi possivel entrar com Google. Codigo: " + e.getStatusCode());
         }
     }
 
