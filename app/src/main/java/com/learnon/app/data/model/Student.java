@@ -16,12 +16,23 @@ public class Student {
     @SerializedName("token")
     private String token;
 
+    @SerializedName("accessToken")
+    private String accessToken;
+
+    @SerializedName("refreshToken")
+    private String refreshToken;
+
     @SerializedName("student")
     private StudentData student;
 
     public int getId() { return id; }
     public String getEmail() { return email; }
-    public String getToken() { return token; }
+    public String getToken() {
+        if (accessToken != null) return accessToken;
+        return token;
+    }
+
+    public String getRefreshToken() { return refreshToken; }
 
     public String getName() {
         if (name != null) return name;

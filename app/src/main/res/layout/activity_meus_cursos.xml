@@ -2,61 +2,147 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#f0ebe3">
+    android:background="@color/learnon_background"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="#ffffff"
+        android:background="@color/learnon_surface"
         android:elevation="4dp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingEnd="24dp">
 
         <TextView
             android:id="@+id/tvVoltar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="← "
-            android:textSize="20sp"
-            android:textColor="#1c2b3a"
-            android:padding="8dp" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="&lt;"
+            android:textColor="@color/learnon_text"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:layout_weight="1"
             android:text="Meus Cursos"
+            android:textColor="@color/learnon_text"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#1c2b3a" />
+            android:textStyle="bold" />
 
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/listaCursos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="24dp">
 
-            <TextView
-                android:id="@+id/tvSemCursos"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Voce ainda nao tem cursos."
-                android:textSize="14sp"
-                android:textColor="#7a7060"
+                android:layout_marginBottom="22dp"
+                android:background="@drawable/course_header_bg"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Sua jornada"
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Continue de onde parou"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvResumoCursos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Carregando seus cursos..."
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvSecaoCursos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:text="Cursos em andamento"
+                android:textColor="@color/learnon_text"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/listaCursos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:id="@+id/emptyCursos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/course_card_bg"
                 android:gravity="center"
-                android:padding="48dp"
-                android:background="@drawable/card_bg"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/course_chip_primary_bg"
+                    android:gravity="center"
+                    android:text="+"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvSemCursos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Voce ainda nao tem cursos."
+                    android:textColor="@color/learnon_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvSemCursosDetalhe"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="Quando voce se matricular, eles aparecem aqui com progresso e acesso rapido."
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

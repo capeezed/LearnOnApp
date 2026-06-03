@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f0ebe3"
+    android:background="@color/learnon_background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -13,30 +13,32 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="64dp"
-            android:background="#ffffff"
+            android:background="@color/learnon_surface"
             android:elevation="4dp"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingEnd="24dp">
 
             <TextView
                 android:id="@+id/tvVoltar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="← "
-                android:textSize="20sp"
-                android:textColor="#1c2b3a"
-                android:padding="8dp" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="&lt;"
+                android:textColor="@color/learnon_text"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
                 android:layout_weight="1"
                 android:text="Pedir Curso"
+                android:textColor="@color/learnon_text"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#1c2b3a" />
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -46,145 +48,180 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Titulo do curso"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1c2b3a"
-                android:layout_marginBottom="8dp" />
-
-            <EditText
-                android:id="@+id/etTitulo"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="Ex: Como usar async/await"
-                android:background="@drawable/input_bg"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="#1c2b3a"
-                android:textColorHint="#7a7060"
-                android:textSize="15sp"
-                android:layout_marginBottom="20dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Descricao"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1c2b3a"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="22dp"
+                android:background="@drawable/course_header_bg"
+                android:orientation="vertical"
+                android:padding="24dp">
 
-            <EditText
-                android:id="@+id/etDescricao"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:hint="Descreva sua duvida em detalhes..."
-                android:background="@drawable/input_bg"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="12dp"
-                android:textColor="#1c2b3a"
-                android:textColorHint="#7a7060"
-                android:textSize="15sp"
-                android:gravity="top"
-                android:inputType="textMultiLine"
-                android:layout_marginBottom="20dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Transforme uma duvida em curso"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="23sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Area / Tema"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1c2b3a"
-                android:layout_marginBottom="8dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Descreva o tema e o formato ideal para voce."
+                    android:textColor="@color/learnon_text_muted"
+                    android:textSize="14sp" />
 
-            <EditText
-                android:id="@+id/etTopico"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="Ex: JavaScript, Design, Marketing"
-                android:background="@drawable/input_bg"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="#1c2b3a"
-                android:textColorHint="#7a7060"
-                android:textSize="15sp"
-                android:layout_marginBottom="20dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Formato preferido"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1c2b3a"
-                android:layout_marginBottom="8dp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="20dp">
+                android:background="@drawable/course_card_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Titulo do curso"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etTitulo"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/input_bg"
+                    android:hint="Ex: Como usar async/await"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/learnon_text"
+                    android:textColorHint="@color/learnon_text_muted"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Descricao"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etDescricao"
+                    android:layout_width="match_parent"
+                    android:layout_height="122dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/input_bg"
+                    android:gravity="top"
+                    android:hint="Descreva sua duvida em detalhes..."
+                    android:inputType="textMultiLine"
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/learnon_text"
+                    android:textColorHint="@color/learnon_text_muted"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Area / Tema"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etTopico"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@drawable/input_bg"
+                    android:hint="Ex: JavaScript, Design, Marketing"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/learnon_text"
+                    android:textColorHint="@color/learnon_text_muted"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Formato preferido"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="18dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnAoVivo"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/btn_format_choice"
+                        android:text="Ao vivo"
+                        android:textColor="@color/format_choice_text"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/btnGravado"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/btn_format_choice"
+                        android:text="Gravado"
+                        android:textColor="@color/format_choice_text"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvErro"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@color/learnon_error"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvSucesso"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@color/learnon_success"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
 
                 <Button
-                    android:id="@+id/btnAoVivo"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:text="Ao vivo"
-                    android:textSize="13sp"
-                    android:background="@drawable/btn_outline"
-                    android:textColor="#1c2b3a" />
-
-                <Button
-                    android:id="@+id/btnGravado"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="Gravado"
-                    android:textSize="13sp"
-                    android:background="@drawable/btn_outline"
-                    android:textColor="#1c2b3a" />
+                    android:id="@+id/btnEnviar"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/btn_primary"
+                    android:text="Enviar pedido"
+                    android:textColor="@color/learnon_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvErro"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#d64e2a"
-                android:textSize="13sp"
-                android:gravity="center"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvSucesso"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#2a7a6e"
-                android:textSize="13sp"
-                android:gravity="center"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/btnEnviar"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="Enviar pedido"
-                android:textColor="#ffffff"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:background="@drawable/btn_primary" />
 
         </LinearLayout>
     </LinearLayout>

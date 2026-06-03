@@ -1,12 +1,19 @@
 package com.learnon.app.ui.dashboard;
 
 import android.content.Intent;
+import android.annotation.SuppressLint;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebViewClient;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.learnon.app.R;
 import com.learnon.app.data.api.ApiClient;
@@ -14,7 +21,9 @@ import com.learnon.app.data.api.ApiService;
 import com.learnon.app.data.model.Pedido;
 import com.learnon.app.ui.agenda.AgendaActivity;
 import com.learnon.app.ui.auth.LoginActivity;
+import com.learnon.app.ui.chatbot.BotpressWebView;
 import com.learnon.app.ui.cursos.MeusCursosActivity;
+import com.learnon.app.ui.cursos.PaymentTestActivity;
 import com.learnon.app.ui.pedidos.PedirCursoActivity;
 import com.learnon.app.utils.SessionManager;
 
@@ -27,7 +36,8 @@ import retrofit2.Response;
 public class DashboardActivity extends AppCompatActivity {
 
     private TextView tvBoasVindas, tvSair, tvSemPedidos;
-    private LinearLayout cardMeusCursos, cardAgenda, cardPedirCurso, listaPedidos;
+    private LinearLayout cardMeusCursos, cardAgenda, cardPedirCurso, cardComprarCurso, listaPedidos;
+    private BotpressWebView webViewBotpressDashboard;
     private SessionManager session;
     private ApiService api;
 
@@ -45,6 +55,8 @@ public class DashboardActivity extends AppCompatActivity {
         cardMeusCursos = findViewById(R.id.cardMeusCursos);
         cardAgenda     = findViewById(R.id.cardAgenda);
         cardPedirCurso = findViewById(R.id.cardPedirCurso);
+        cardComprarCurso = findViewById(R.id.cardComprarCurso);
+        webViewBotpressDashboard = findViewById(R.id.webViewBotpressDashboard);
         listaPedidos   = findViewById(R.id.listaPedidos);
 
         tvBoasVindas.setText("Ola, " + session.getNome() + "!");
@@ -67,7 +79,25 @@ public class DashboardActivity extends AppCompatActivity {
                 startActivity(new Intent(this, PedirCursoActivity.class))
         );
 
+        cardComprarCurso.setOnClickListener(v ->
+                startActivity(new Intent(this, PaymentTestActivity.class))
+        );
+
+        configurarBotpressNoDashboard();
+
         carregarPedidos();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webViewBotpressDashboard != null && webViewBotpressDashboard.isChatActive()) {
+            webViewBotpressDashboard.evaluateJavascript(
+                    "window.botpress && window.botpress.close && window.botpress.close();",
+                    value -> webViewBotpressDashboard.setChatActive(false)
+            );
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -111,36 +141,60 @@ public class DashboardActivity extends AppCompatActivity {
 
     private View criarItemPedido(Pedido pedido) {
         LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setBackground(getDrawable(R.drawable.card_bg));
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setBackground(ContextCompat.getDrawable(this, R.drawable.course_card_bg));
+        row.setElevation(dp(2));
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        params.setMargins(0, 0, 0, 12);
+        params.setMargins(0, 0, 0, dp(12));
         row.setLayoutParams(params);
-        row.setPadding(40, 32, 40, 32);
+        row.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+        TextView marker = new TextView(this);
+        marker.setText(">");
+        marker.setGravity(Gravity.CENTER);
+        marker.setTextSize(18);
+        marker.setTextColor(0xFFECEEF9);
+        marker.setTypeface(null, Typeface.BOLD);
+        marker.setBackground(ContextCompat.getDrawable(this, R.drawable.course_chip_soft_bg));
+        LinearLayout.LayoutParams markerParams = new LinearLayout.LayoutParams(dp(38), dp(38));
+        markerParams.setMargins(0, 0, dp(14), 0);
+        marker.setLayoutParams(markerParams);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setLayoutParams(new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
         TextView titulo = new TextView(this);
-        titulo.setText(pedido.getTitle());
+        titulo.setText(textoOuPadrao(pedido.getTitle(), "Pedido sem titulo"));
         titulo.setTextSize(15);
-        titulo.setTextColor(0xFF1c2b3a);
-        titulo.setTypeface(null, android.graphics.Typeface.BOLD);
+        titulo.setTextColor(0xFFECEEF9);
+        titulo.setTypeface(null, Typeface.BOLD);
+        titulo.setMaxLines(2);
 
         TextView tag = new TextView(this);
-        tag.setText(pedido.getTopicTag());
+        tag.setText(textoOuPadrao(pedido.getTopicTag(), "Geral"));
         tag.setTextSize(12);
-        tag.setTextColor(0xFF7a7060);
+        tag.setTextColor(0xFFB4B4C3);
+        tag.setPadding(0, dp(4), 0, 0);
 
         TextView status = new TextView(this);
         status.setText(traduzirStatus(pedido.getStatus()));
         status.setTextSize(12);
         status.setTextColor(statusCor(pedido.getStatus()));
+        status.setTypeface(null, Typeface.BOLD);
+        status.setPadding(0, dp(8), 0, 0);
 
-        row.addView(titulo);
-        row.addView(tag);
-        row.addView(status);
+        content.addView(titulo);
+        content.addView(tag);
+        content.addView(status);
+        row.addView(marker);
+        row.addView(content);
 
         return row;
     }
@@ -157,13 +211,67 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private int statusCor(String status) {
-        if (status == null) return 0xFF7a7060;
+        if (status == null) return 0xFFB4B4C3;
         switch (status) {
-            case "pending":       return 0xFFc8963e;
-            case "matched":       return 0xFF2a7a6e;
-            case "in_production": return 0xFF1c2b3a;
-            case "delivered":     return 0xFF2a7a6e;
-            default:              return 0xFF7a7060;
+            case "pending":
+            case "aguardando_match":
+            case "aguardando_instrutor":
+                return 0xFF4937A6;
+            case "matched":
+            case "em_andamento":
+            case "in_production":
+                return 0xFF4937A6;
+            case "delivered":
+            case "concluido":
+                return 0xFF6B5CFF;
+            default:
+                return 0xFFB4B4C3;
         }
+    }
+
+    private String textoOuPadrao(String texto, String padrao) {
+        return texto == null || texto.trim().isEmpty() ? padrao : texto;
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void configurarBotpressNoDashboard() {
+        webViewBotpressDashboard.setBackgroundColor(0x00000000);
+        webViewBotpressDashboard.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
+        WebSettings settings = webViewBotpressDashboard.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setUseWideViewPort(true);
+
+        webViewBotpressDashboard.setWebViewClient(new WebViewClient());
+        webViewBotpressDashboard.setWebChromeClient(new WebChromeClient());
+
+        String html = "<!DOCTYPE html>"
+                + "<html lang=\"pt-BR\">"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                + "<style>"
+                + "html, body { height: 100%; margin: 0; background: transparent; overflow: hidden; }"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<script src=\"https://cdn.botpress.cloud/webchat/v3.6/inject.js\" defer></script>"
+                + "<script src=\"https://files.bpcontent.cloud/2026/05/10/11/20260510115921-COZ7U0ZS.js\" defer></script>"
+                + "</body>"
+                + "</html>";
+
+        webViewBotpressDashboard.loadDataWithBaseURL(
+                "https://cdn.botpress.cloud/",
+                html,
+                "text/html",
+                "UTF-8",
+                null
+        );
+    }
+
+    private int dp(int valor) {
+        return Math.round(valor * getResources().getDisplayMetrics().density);
     }
 }

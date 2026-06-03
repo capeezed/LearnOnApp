@@ -2,4 +2,20 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="learnon_background">#080C16</color>
+    <color name="learnon_surface">#0F1222</color>
+    <color name="learnon_surface_variant">#363A4F</color>
+    <color name="learnon_primary">#4937A6</color>
+    <color name="learnon_primary_hover">#6B5CFF</color>
+    <color name="learnon_primary_shadow">#7C7297</color>
+    <color name="learnon_cta">#DE6618</color>
+    <color name="learnon_cta_shadow">#441808</color>
+    <color name="learnon_secondary">#4937A6</color>
+    <color name="learnon_tertiary">#DE6618</color>
+    <color name="learnon_text">#ECEEF9</color>
+    <color name="learnon_text_muted">#B4B4C3</color>
+    <color name="learnon_text_disabled">#717079</color>
+    <color name="learnon_error">#F87171</color>
+    <color name="learnon_success">#6B5CFF</color>
+    <color name="learnon_on_primary">#FFFFFFFF</color>
 </resources>

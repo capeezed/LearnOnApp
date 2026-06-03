@@ -29,6 +29,10 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".instructor.InstructorDashboardActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.dashboard.DashboardActivity"
             android:exported="false" />
 
@@ -39,6 +43,18 @@
 
         <activity
             android:name=".ui.cursos.MeusCursosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.cursos.PaymentTestActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.cursos.CourseVideosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.cursos.VideoPlayerActivity"
             android:exported="false" />
 
         <activity
